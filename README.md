@@ -1,4 +1,4 @@
-# For now, I only implement the SELECT method in this app, no other method yet.
+# For now, I only implement a SELECT and INSERT method in this app, no other method yet.
 
 ### Tech Stack
 - Golang
