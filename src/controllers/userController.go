@@ -44,7 +44,7 @@ func addUser(c echo.Context) error {
 	}
 
 	if rowsAffected == 0 {
-		return c.JSON(http.StatusInternalServerError, "No rows affected")
+		return c.JSON(http.StatusOK, "No rows affected")
 	}
 
 	c.JSON(http.StatusOK, "User added successfully")
