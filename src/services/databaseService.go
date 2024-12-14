@@ -74,3 +74,45 @@ func SelectData(table string, fields []string, where bool, whereCon string) ([]m
 
 	return results, nil
 }
+
+func InsertData(table string, data map[string]interface{}) (int64, error) {
+	var columns []string
+	var placeholders []string
+	var values []interface{}
+
+	for column, value := range data{
+		columns = append(columns, column)
+		values = append(values, value)
+		placeholders = append(placeholders, "?")
+	}
+	
+	query := fmt.Sprintf(
+		"INSERT INTO %s (%s) VALUES (%s)",
+		table,
+		strings.Join(columns, ", "),
+		strings.Join(placeholders, ", "),
+	)
+
+	fmt.Println("Executing query:", query)
+
+	// Prepare the statement
+	stmt, err := database.DB.Prepare(query)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	// Execute the statement
+	result, err := stmt.Exec(values...)
+	if err != nil {
+		return 0, err
+	}
+
+	// Get the number of rows affected
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}

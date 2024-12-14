@@ -67,3 +67,13 @@ func GetAllUsers() ([]models.User, error) {
 
 	return users, nil
 }
+
+func AddUser(data map[string]interface{}) (int64, error) {
+	table := "users"
+	rowsAffected, err := InsertData(table, data)
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}

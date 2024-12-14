@@ -14,7 +14,7 @@ var DB *sql.DB
 func InitDB() {
 	var err error
 	// MySQL database credentials
-	dsn := "root:yourpassword@tcp(localhost:3306)/yourtable"
+	dsn := "root:n05661190@tcp(localhost:3306)/testdb"
 	DB, err = sql.Open("mysql", dsn)
 	if err != nil {
 		log.Fatal(err)
