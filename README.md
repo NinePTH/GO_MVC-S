@@ -4,5 +4,6 @@
 - MySQL
 
 ### Design pattern: MVC-S
+<hr />
 
-For now, I only implement the SELECT method with app, no other method yet.
+For now, I only implement the SELECT method in this app, no other method yet.
