@@ -9,7 +9,7 @@ func GetUser(id string) (*models.User, error) {
 	table := "users"
 	fields := []string{"id", "name", "age"}
 
-	result, err := SelectData(table, fields, true, "id = " + id)
+	result, err := SelectData(table, fields, true, "id = ?", []interface{}{id})
 
 	if err != nil {
         return nil, err
@@ -40,7 +40,7 @@ func GetAllUsers() ([]models.User, error) {
 	fields := []string{"id", "name", "age"}
 
 	// Call SelectData function
-	results, err := SelectData("users", fields, false, "")
+	results, err := SelectData("users", fields, false, "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +71,19 @@ func GetAllUsers() ([]models.User, error) {
 func AddUser(data map[string]interface{}) (int64, error) {
 	table := "users"
 	rowsAffected, err := InsertData(table, data)
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}
+
+func DeleteUser(id string) (int64, error) {
+	table := "users"
+	condition := "id = ?"
+	conditionValues := []interface{}{id}
+	
+	rowsAffected, err := DeleteData(table, condition, conditionValues)
 	if err != nil {
 		return 0, err
 	}

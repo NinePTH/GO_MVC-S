@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func SelectData(table string, fields []string, where bool, whereCon string) ([]map[string]interface{}, error) {
+func SelectData(table string, fields []string, where bool, whereCon string, whereArgs []interface{}) ([]map[string]interface{}, error) {
 	var query string = "SELECT "
 
 	for _, field := range fields {
@@ -23,7 +23,7 @@ func SelectData(table string, fields []string, where bool, whereCon string) ([]m
 
 	fmt.Println("Executing query:", query)
 
-	rows, err := database.DB.Query(query)
+	rows, err := database.DB.Query(query, whereArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -109,6 +109,30 @@ func InsertData(table string, data map[string]interface{}) (int64, error) {
 	}
 
 	// Get the number of rows affected
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}
+
+func DeleteData(table string, condition string, conditionValues []interface{}) (int64, error) {
+	query := fmt.Sprintf("DELETE FROM %s WHERE %s", table, condition)
+	fmt.Println("Executing query:", query)
+
+	// Prepare the statement
+	stmt, err := database.DB.Prepare(query)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(conditionValues...)
+	if err != nil {
+		return 0, err
+	}
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return 0, err

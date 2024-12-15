@@ -10,12 +10,16 @@ func GetUserRoutes(e *echo.Echo) {
     e.GET("/users/:id", getUser)
     e.GET("/users", getAllUsers)
 	e.POST("/users", addUser)
+	e.DELETE("/users/:id", deleteUser)
 }
 
 func getUser(c echo.Context) error {
 	id := c.Param("id")	
 	user, err := services.GetUser(id)
 	if err != nil {
+		if  err.Error() == "user not found" {
+			return c.JSON(http.StatusNoContent, err.Error())
+		}
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
@@ -48,6 +52,22 @@ func addUser(c echo.Context) error {
 	}
 
 	c.JSON(http.StatusOK, "User added successfully")
+
+	return nil
+}
+
+func deleteUser(c echo.Context) error {
+	id := c.Param("id")
+	rowsAffected, err := services.DeleteUser(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	if rowsAffected == 0 {
+		return c.JSON(http.StatusOK, "No rows affected")
+	}
+
+	c.JSON(http.StatusOK, "User deleted successfully")
 
 	return nil
 }
