@@ -9,7 +9,7 @@ func GetUser(id string) (*models.User, error) {
 	table := "users"
 	fields := []string{"id", "name", "age"}
 
-	result, err := SelectData(table, fields, true, "id = ?", []interface{}{id})
+	result, err := SelectData(table, fields, true, "id = $1", []interface{}{id})
 
 	if err != nil {
         return nil, err
@@ -20,8 +20,8 @@ func GetUser(id string) (*models.User, error) {
     }
 
 
-	idRaw := string(result[0]["id"].([]byte)) // Convert 'id' to string
-	nameRaw := string(result[0]["name"].([]byte)) // Convert 'name' to string
+	idRaw := string(result[0]["id"].(string)) // Convert 'id' to string
+	nameRaw := string(result[0]["name"].(string)) // Convert 'name' to string
 	ageRaw := int(result[0]["age"].(int64)) // Convert 'age' to int
 
 	// Assign the values to the User struct
@@ -51,8 +51,8 @@ func GetAllUsers() ([]models.User, error) {
 	// Iterate over the results and convert them into models.User
 	for _, row := range results {
 
-		id := string(row["id"].([]byte))  // Convert 'id' to string
-		name := string(row["name"].([]byte)) // Convert 'name' to string
+		id := string(row["id"].(string))  // Convert 'id' to string
+		name := string(row["name"].(string)) // Convert 'name' to string
 		age := int(row["age"].(int64))   // Convert 'age' to int
 
 		user := models.User{
@@ -80,7 +80,7 @@ func AddUser(data map[string]interface{}) (int64, error) {
 
 func DeleteUser(id string) (int64, error) {
 	table := "users"
-	condition := "id = ?"
+	condition := "id = $1"
 	conditionValues := []interface{}{id}
 	
 	rowsAffected, err := DeleteData(table, condition, conditionValues)

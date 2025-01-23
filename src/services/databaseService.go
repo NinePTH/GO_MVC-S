@@ -83,7 +83,7 @@ func InsertData(table string, data map[string]interface{}) (int64, error) {
 	for column, value := range data{
 		columns = append(columns, column)
 		values = append(values, value)
-		placeholders = append(placeholders, "?")
+		placeholders = append(placeholders, fmt.Sprintf("$%d", len(placeholders)+1))
 	}
 	
 	query := fmt.Sprintf(
