@@ -7,7 +7,7 @@
 ## Tech Stack:
 - Golang
 - Echo framework
-- MySQL
+- PostgreSQL
 
 ### Design pattern: MVC-S
 
