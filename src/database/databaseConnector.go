@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 	// _ "github.com/go-sql-driver/mysql"
@@ -20,12 +21,19 @@ func InitDB() {
 	cwd, _ := os.Getwd()
     fmt.Println("Current working directory:", cwd)
 
+	envPaths := []string{
+		"../etc/secrets/.env",    // Local development path
+		"/etc/secrets/.env",      // Production path
+		"./etc/secrets/.env",     // Alternative local path
+	}
+
 	// Load environment variables from .env file
-	err := godotenv.Load("../etc/secrets/.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	} else {
-		fmt.Println(".env file loaded successfully")
+	for _, path := range envPaths {
+		absPath, _ := filepath.Abs(path)
+		if err := godotenv.Load(path); err == nil {
+			fmt.Printf(".env file loaded successfully from: %s\n", absPath)
+			break
+		}
 	}
 
 	// Get database credentials from environment variables
@@ -51,6 +59,7 @@ func InitDB() {
 	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=&pool_mode=session", dbUser, dbPassword, dbHost, dbPort, dbName)
 	// MySQL database credentials
 	// dsn := "root:yourpassword@tcp(localhost:3306)/yourdb"
+	var err error
 	DB, err = sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatal(err)
