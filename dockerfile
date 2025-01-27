@@ -11,9 +11,6 @@ RUN go mod download
 # Copy the Go source files
 COPY src/ ./src/
 
-# Copy the .env file
-COPY .env ./
-
 # Set the working directory to match your application's structure
 WORKDIR /app/src
 
