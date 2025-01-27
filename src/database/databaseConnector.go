@@ -27,14 +27,26 @@ func InitDB() {
 		"./etc/secrets/.env",     // Alternative local path
 	}
 
-	// Load environment variables from .env file
+	// Load environment variables from different possible locations
+	var envLoaded bool
 	for _, path := range envPaths {
 		absPath, _ := filepath.Abs(path)
 		if err := godotenv.Load(path); err == nil {
 			fmt.Printf(".env file loaded successfully from: %s\n", absPath)
+			envLoaded = true
 			break
 		}
 	}
+
+	if !envLoaded {
+		// If no .env file is found, check if we're in production with environment variables already set
+		if os.Getenv("DB_USER") != "" {
+			fmt.Println("No .env file found, but environment variables are set (production environment)")
+		} else {
+			log.Fatal("Error: Could not load .env file and no environment variables are set")
+		}
+	}
+
 
 	// Get database credentials from environment variables
 	dbUser := os.Getenv("DB_USER")
