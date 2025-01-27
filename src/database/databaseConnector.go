@@ -21,7 +21,7 @@ func InitDB() {
     fmt.Println("Current working directory:", cwd)
 
 	// Load environment variables from .env file
-	err := godotenv.Load("/etc/secrets/.env")
+	err := godotenv.Load("../etc/secrets/.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	} else {
