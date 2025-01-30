@@ -1,23 +1,24 @@
 package controllers
 
 import (
-    "learn-Go/src/services"
+	"learn-Go/src/services"
 	"net/http"
-    "github.com/labstack/echo/v4"
+
+	"github.com/labstack/echo/v4"
 )
 
 func GetUserRoutes(e *echo.Echo) {
-    e.GET("/users/:id", getUser)
-    e.GET("/users", getAllUsers)
+	e.GET("/users/:id", getUser)
+	e.GET("/users", getAllUsers)
 	e.POST("/users", addUser)
 	e.DELETE("/users/:id", deleteUser)
 }
 
 func getUser(c echo.Context) error {
-	id := c.Param("id")	
+	id := c.Param("id")
 	user, err := services.GetUser(id)
 	if err != nil {
-		if  err.Error() == "user not found" {
+		if err.Error() == "user not found" {
 			return c.JSON(http.StatusNoContent, err.Error())
 		}
 		return c.JSON(http.StatusInternalServerError, err.Error())
