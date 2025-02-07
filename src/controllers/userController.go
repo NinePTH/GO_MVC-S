@@ -7,17 +7,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetUserRoutes(e *echo.Echo) {
-	e.GET("/users/:id", getUser)
-	e.GET("/users", getAllUsers)
-	e.POST("/users", addUser)
-	e.DELETE("/users/:id", deleteUser)
-
-	e.GET("/patient", getAllPatient)
-}
-
-func getUser(c echo.Context) error {
-	id := c.Param("id")
+func GetUser(c echo.Context) error {
+	id := c.Param("id")	
 	user, err := services.GetUser(id)
 	if err != nil {
 		if err.Error() == "user not found" {
@@ -28,7 +19,7 @@ func getUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
-func getAllUsers(c echo.Context) error {
+func GetAllUsers(c echo.Context) error {
 	user, err := services.GetAllUsers()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -36,7 +27,7 @@ func getAllUsers(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
-func addUser(c echo.Context) error {
+func AddUser(c echo.Context) error {
 	id := c.QueryParam("id")
 	name := c.QueryParam("name")
 	age := c.QueryParam("age")
@@ -57,7 +48,7 @@ func addUser(c echo.Context) error {
 	return nil
 }
 
-func deleteUser(c echo.Context) error {
+func DeleteUser(c echo.Context) error {
 	id := c.Param("id")
 	rowsAffected, err := services.DeleteUser(id)
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func getAllPatient(c echo.Context) error {
+func GetAllPatients(c echo.Context) error {
 	patient, err := services.GetAllPatients()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
