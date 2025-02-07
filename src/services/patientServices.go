@@ -22,10 +22,10 @@ func GetAllPatients() ([]models.Patient, error) {
 		allergies := string(row["allergies"].(string))
 
 		patient := models.Patient{
-			Id:        int(id),
+			Id:        id,
 			First_name:      first_name,
 			Last_name:   last_name,
-			Age:       int(age),
+			Age:       age,
 			Disease:   disease,
 			Medicine:  medicine,
 			Allergies: allergies,
