@@ -68,7 +68,7 @@ func InitDB() {
 	}
 
 	// MySQL data source name (DSN)
-	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=&pool_mode=session", dbUser, dbPassword, dbHost, dbPort, dbName)
+	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=require&pool_mode=session", dbUser, dbPassword, dbHost, dbPort, dbName)
 	// MySQL database credentials
 	// dsn := "root:yourpassword@tcp(localhost:3306)/yourdb"
 	var err error
