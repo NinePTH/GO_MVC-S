@@ -6,25 +6,25 @@ import (
 )
 
 func GetAllPatients() ([]models.Patient, error) {
-	fields := []string{"id", "name", "surname", "age", "disease", "medicine", "allergies"}
-	results, err := SelectData("patient", fields, false, "", nil)
+	fields := []string{"*"}
+	results, err := SelectData("Patients", fields, false, "", nil)
 	if err != nil {
 		return nil, err
 	}
 	var patients []models.Patient
 	for _, row := range results {
-		id := int(row["ID"].(int))
-		name := string(row["Name"].(string))
-		surname := string(row["Surname"].(string))
-		age := int(row["Age"].(int))
-		disease := string(row["Disease"].(string))
-		medicine := string(row["Medicine"].(string))
-		allergies := string(row["Allergies"].(string))
+		id := int(row["id"].(int64))
+		first_name := string(row["first_name"].(string))
+		last_name := string(row["last_name"].(string))
+		age := int(row["age"].(int64))
+		disease := string(row["disease"].(string))
+		medicine := string(row["medicine"].(string))
+		allergies := string(row["allergies"].(string))
 
 		patient := models.Patient{
-			ID:        int(id),
-			Name:      name,
-			Surname:   surname,
+			Id:        int(id),
+			First_name:      first_name,
+			Last_name:   last_name,
 			Age:       int(age),
 			Disease:   disease,
 			Medicine:  medicine,
