@@ -20,7 +20,7 @@
    ```bash
    git clone https://github.com/NinePTH/GO_MVC-S.git
    cd GO_MVC-S
-2. Create a .env file
+2. Create a .env file at /etc/secrets
    ```env
    DB_USER=postgres
    DB_PASSWORD=password
