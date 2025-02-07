@@ -12,6 +12,8 @@ func GetUserRoutes(e *echo.Echo) {
 	e.GET("/users", getAllUsers)
 	e.POST("/users", addUser)
 	e.DELETE("/users/:id", deleteUser)
+
+	e.GET("/patient", getAllPatient)
 }
 
 func getUser(c echo.Context) error {
@@ -23,7 +25,6 @@ func getUser(c echo.Context) error {
 		}
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-
 	return c.JSON(http.StatusOK, user)
 }
 
@@ -32,7 +33,6 @@ func getAllUsers(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-
 	return c.JSON(http.StatusOK, user)
 }
 
