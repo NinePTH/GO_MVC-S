@@ -67,7 +67,7 @@ func InitDB() {
 		log.Fatal("Missing environment variables for database connection")
 	}
 
-	// MySQL data source name (DSN)
+	// PostgreSQL data source name (DSN)
 	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPassword, dbHost, dbPort, dbName)
 	// MySQL database credentials
 	// dsn := "root:yourpassword@tcp(localhost:3306)/yourdb"
