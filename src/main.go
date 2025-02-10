@@ -1,11 +1,12 @@
 package main
 
 import (
-    "fmt"
-    "learn-Go/src/routes"
+	"fmt"
+
+	"github.com/NinePTH/GO_MVC-S/src/routes"
+	"github.com/NinePTH/GO_MVC-S/src/utils/databaseConnector"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"learn-Go/src/utils/databaseConnector"
 )
 
 func main() {

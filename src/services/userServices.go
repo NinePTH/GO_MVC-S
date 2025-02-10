@@ -2,7 +2,8 @@ package services
 
 import (
 	"fmt"
-	"learn-Go/src/models"
+
+	"github.com/NinePTH/GO_MVC-S/src/models"
 )
 
 func GetUser(id string) (*models.User, error) {

@@ -1,4 +1,4 @@
-module learn-Go
+module github.com/NinePTH/GO_MVC-S
 
 go 1.23.4
 
