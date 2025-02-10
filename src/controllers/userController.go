@@ -1,21 +1,21 @@
 package controllers
 
 import (
-    "learn-Go/src/services"
+	"learn-Go/src/services"
 	"net/http"
-    "github.com/labstack/echo/v4"
+
+	"github.com/labstack/echo/v4"
 )
 
 func GetUser(c echo.Context) error {
 	id := c.Param("id")	
 	user, err := services.GetUser(id)
 	if err != nil {
-		if  err.Error() == "user not found" {
+		if err.Error() == "user not found" {
 			return c.JSON(http.StatusNoContent, err.Error())
 		}
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-
 	return c.JSON(http.StatusOK, user)
 }
 
@@ -24,7 +24,6 @@ func GetAllUsers(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-
 	return c.JSON(http.StatusOK, user)
 }
 
