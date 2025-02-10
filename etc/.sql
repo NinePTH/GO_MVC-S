@@ -8,6 +8,13 @@ CREATE TABLE Patients (
 	allergies VARCHAR(20) NOT NULL
 );
 
+CREATE TABLE Users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password TEXT NOT NULL
+);
+
+
 INSERT INTO Patients (first_name, last_name, age, disease, medicine, allergies)
 VALUES	('John', 'Doe', 45, 'Diabetes', 'Metformin', 'Penicillin'),
 	('Alice', 'Smith', 34, 'Hypertension', 'Lisinopril', 'None'),
