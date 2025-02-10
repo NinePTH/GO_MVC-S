@@ -5,11 +5,11 @@ import (
     "learn-Go/src/routes"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"learn-Go/src/database"
+	"learn-Go/src/utils"
 )
 
 func main() {
-	database.InitDB()
+	utils.InitDB()
 
 	e := echo.New()
 
