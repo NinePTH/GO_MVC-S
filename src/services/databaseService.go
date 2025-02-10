@@ -1,10 +1,12 @@
 package services
 
 import (
-	"learn-Go/src/database"
 	"fmt"
 	"strings"
+
+	"github.com/NinePTH/GO_MVC-S/src/utils/databaseConnector"
 )
+
 // select distinct,inner join ,etc.
 func SelectData(table string, fields []string, where bool, whereCon string, whereArgs []interface{}) ([]map[string]interface{}, error) {
 	var query string = "SELECT "
@@ -23,7 +25,7 @@ func SelectData(table string, fields []string, where bool, whereCon string, wher
 
 	fmt.Println("Executing query:", query)
 
-	rows, err := database.DB.Query(query, whereArgs...)
+	rows, err := databaseConnector.DB.Query(query, whereArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +98,7 @@ func InsertData(table string, data map[string]interface{}) (int64, error) {
 	fmt.Println("Executing query:", query)
 
 	// Prepare the statement
-	stmt, err := database.DB.Prepare(query)
+	stmt, err := databaseConnector.DB.Prepare(query)
 	if err != nil {
 		return 0, err
 	}
@@ -122,7 +124,7 @@ func DeleteData(table string, condition string, conditionValues []interface{}) (
 	fmt.Println("Executing query:", query)
 
 	// Prepare the statement
-	stmt, err := database.DB.Prepare(query)
+	stmt, err := databaseConnector.DB.Prepare(query)
 	if err != nil {
 		return 0, err
 	}

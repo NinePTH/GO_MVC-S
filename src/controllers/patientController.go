@@ -1,8 +1,9 @@
 package controllers
 
 import (
-	"learn-Go/src/services"
 	"net/http"
+
+	"github.com/NinePTH/GO_MVC-S/src/services"
 
 	"github.com/labstack/echo/v4"
 )

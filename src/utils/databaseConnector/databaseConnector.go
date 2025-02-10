@@ -1,4 +1,4 @@
-package utils
+package databaseConnector
 
 import (
 	"database/sql"

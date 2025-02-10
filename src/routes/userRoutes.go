@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"learn-Go/src/controllers"
+	"github.com/NinePTH/GO_MVC-S/src/controllers"
 
 	"github.com/labstack/echo/v4"
 )
