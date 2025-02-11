@@ -12,7 +12,3 @@ func UserRoutes(e *echo.Echo) {
 	e.POST("/users",controllers. AddUser)
 	e.DELETE("/users/:id", controllers.DeleteUser)
 }
-
-func AuthRoutes(e *echo.Echo) {
-	e.POST("/register", controllers.Register)
-}
