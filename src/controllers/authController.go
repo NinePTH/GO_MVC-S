@@ -67,19 +67,19 @@ func Login(c echo.Context) error {
 func Profile(c echo.Context) error {
     // Retrieve the "user" from the context (this is the JWT claims)
 	userInterface := c.Get("user")
-	claims, ok := userInterface.(jwt.MapClaims)
-	if !ok {
+	claims, err := userInterface.(jwt.MapClaims)
+	if !err {
 		return c.JSON(http.StatusUnauthorized, "Invalid or missing user claims")
 	}
 
 	// Extract the username from the claims
-	username, ok := claims["username"].(string)
-	if !ok {
+	username, err := claims["username"].(string)
+	if !err {
 		return c.JSON(http.StatusUnauthorized, "Username not found in token claims")
 	}
 
 	// Print username for debugging (optional)
 	fmt.Println("Username:", username)
 
-    return c.JSON(http.StatusOK, map[string]string{"message": "Welcome, " + username})
+    return c.JSON(http.StatusOK, map[string]string{"username":  username})
 }
