@@ -1,41 +1,34 @@
 package controllers
 
 import (
-    "learn-Go/src/services"
 	"net/http"
-    "github.com/labstack/echo/v4"
+
+	"github.com/NinePTH/GO_MVC-S/src/services"
+
+	"github.com/labstack/echo/v4"
 )
 
-func GetUserRoutes(e *echo.Echo) {
-    e.GET("/users/:id", getUser)
-    e.GET("/users", getAllUsers)
-	e.POST("/users", addUser)
-	e.DELETE("/users/:id", deleteUser)
-}
-
-func getUser(c echo.Context) error {
+func GetUser(c echo.Context) error {
 	id := c.Param("id")	
 	user, err := services.GetUser(id)
 	if err != nil {
-		if  err.Error() == "user not found" {
+		if err.Error() == "user not found" {
 			return c.JSON(http.StatusNoContent, err.Error())
 		}
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-
 	return c.JSON(http.StatusOK, user)
 }
 
-func getAllUsers(c echo.Context) error {
+func GetAllUsers(c echo.Context) error {
 	user, err := services.GetAllUsers()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-
 	return c.JSON(http.StatusOK, user)
 }
 
-func addUser(c echo.Context) error {
+func AddUser(c echo.Context) error {
 	id := c.QueryParam("id")
 	name := c.QueryParam("name")
 	age := c.QueryParam("age")
@@ -56,7 +49,7 @@ func addUser(c echo.Context) error {
 	return nil
 }
 
-func deleteUser(c echo.Context) error {
+func DeleteUser(c echo.Context) error {
 	id := c.Param("id")
 	rowsAffected, err := services.DeleteUser(id)
 	if err != nil {
