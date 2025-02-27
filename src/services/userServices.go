@@ -9,8 +9,7 @@ import (
 func GetUser(id string) (*models.User, error) {
 	table := "users"
 	fields := []string{"id", "name", "age"}
-
-	result, err := SelectData(table, fields, true, "id = $1", []interface{}{id})
+	result, err := SelectData(table, fields, true, "id = $1", []interface{}{id}, "id,name,age")
 
 	if err != nil {
 		return nil, err
@@ -40,7 +39,7 @@ func GetAllUsers() ([]models.User, error) {
 	fields := []string{"id", "name", "age"}
 
 	// Call SelectData function
-	results, err := SelectData("users", fields, false, "", nil)
+	results, err := SelectData("users", fields, false, "", nil, "id")
 	if err != nil {
 		return nil, err
 	}

@@ -2,13 +2,12 @@ package services
 
 import (
 	"fmt"
-
 	"github.com/NinePTH/GO_MVC-S/src/models"
 )
 
 func GetAllPatients() ([]models.Patient, error) {
 	fields := []string{"*"}
-	results, err := SelectData("Patients", fields, false, "", nil)
+	results, err := SelectData("Patients", fields, false, "", nil,"id")
 	if err != nil {
 		return nil, err
 	}

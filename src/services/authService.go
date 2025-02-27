@@ -31,7 +31,7 @@ func AuthenticateUser(username string, password string) (*models.Token, error) {
 	whereCondition := "username =$1"
 	whereArgs := []interface{}{username}
 
-	result, err := SelectData("users", fields, true, whereCondition, whereArgs)
+	result, err := SelectData("users", fields, true, whereCondition, whereArgs,"id")
 	if err != nil {
 		return nil, err
 	}
