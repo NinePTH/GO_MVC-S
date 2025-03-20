@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/NinePTH/GO_MVC-S/src/models"
+	"github.com/NinePTH/GO_MVC-S/src/models/login"
 	"github.com/NinePTH/GO_MVC-S/src/services"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -24,15 +24,15 @@ func Register(c echo.Context) error {
     fmt.Println("Raw Request Body:", string(body))
     c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body for Bind()
 
-    var req models.AuthRequest
+    var req login.RegisterRequest
 
     // Bind request JSON to struct
-    if err := c.Bind(&req); err != nil || req.Username == "" || req.Password == "" {
+    if err := c.Bind(&req); err != nil || req.Username == "" || req.Password == "" || req.Role == "" {
         fmt.Println("Bind Error:", err)
         return c.JSON(http.StatusBadRequest, "Invalid request")
     }
 
-    _, err := services.RegisterUser(req.Username, req.Password)
+    _, err := services.RegisterUser(req.Username, req.Password, req.Role)
     if err != nil {
         return c.JSON(http.StatusInternalServerError, err.Error())
     }
@@ -50,7 +50,7 @@ func Login(c echo.Context) error {
      fmt.Println("Raw Request Body:", string(body))
      c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body for Bind()
 
-    var req models.AuthRequest
+    var req login.LoginRequest
     if err:= c.Bind(&req); err != nil || req.Username == "" || req.Password == "" {
         return c.JSON(http.StatusBadRequest, "Invalid request")
     }
@@ -73,13 +73,14 @@ func Profile(c echo.Context) error {
 	}
 
 	// Extract the username from the claims
-	username, err := claims["username"].(string)
-	if !err {
-		return c.JSON(http.StatusUnauthorized, "Username not found in token claims")
+	username, usernameOk := claims["username"].(string)
+	role, roleOk := claims["role"].(string)
+	if !usernameOk || !roleOk {
+		return c.JSON(http.StatusUnauthorized, "Invalid token claims")
 	}
 
 	// Print username for debugging (optional)
-	fmt.Println("Username:", username)
+	fmt.Printf("Username: %s, Role: %s\n", username, role)
 
-    return c.JSON(http.StatusOK, map[string]string{"username":  username})
+    return c.JSON(http.StatusOK, map[string]string{"username":  username, "role": role})
 }

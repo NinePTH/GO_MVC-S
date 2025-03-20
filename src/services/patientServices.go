@@ -8,28 +8,38 @@ import (
 
 func GetAllPatients() ([]models.Patient, error) {
 	fields := []string{"*"}
-	results, err := SelectData("Patients", fields, false, "", nil)
+	results, err := SelectData("Patient", fields, false, "", nil)
 	if err != nil {
 		return nil, err
 	}
 	var patients []models.Patient
 	for _, row := range results {
-		id := int(row["id"].(int64))
-		first_name := string(row["first_name"].(string))
-		last_name := string(row["last_name"].(string))
+		patient_id := int(row["patient_id"].(int64))
+		first_name :=row["first_name"].(string)
+		last_name := row["last_name"].(string)
 		age := int(row["age"].(int64))
-		disease := string(row["disease"].(string))
-		medicine := string(row["medicine"].(string))
-		allergies := string(row["allergies"].(string))
+		gender := string(row["gender"].([]uint8))
+		blood_type := string(row["blood_type"].([]uint8))
+		email := row["email"].(string)
+		health_insurance := row["health_insurance"].(bool)
+		address := row["address"].(string)
+		phone_number := row["phone_number"].(string)
+		id_card_number := row["id_card_number"].(string)
+		ongoing_treatment := row["ongoing_treatment"].(string)
 
 		patient := models.Patient{
-			Id:        id,
+			Patient_id:        patient_id,
 			First_name:      first_name,
 			Last_name:   last_name,
 			Age:       age,
-			Disease:   disease,
-			Medicine:  medicine,
-			Allergies: allergies,
+			Gender:   gender,
+			Blood_type:   blood_type,
+			Email:  email,
+			Health_insurance: health_insurance,
+			Address: address,
+			Phone_number: phone_number,
+			Id_card_number: id_card_number,
+			Ongoing_treatment: ongoing_treatment,
 		}
 		patients = append(patients, patient)
 		fmt.Println(patient)

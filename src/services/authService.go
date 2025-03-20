@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func RegisterUser(username string, password string) (int64, error) {
+func RegisterUser(username string, password string, role string) (int64, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return 0, err
@@ -17,6 +17,7 @@ func RegisterUser(username string, password string) (int64, error) {
 	data := map[string]interface{}{
 		"username": username,
 		"password": string(hashedPassword),
+		"role": role,
 	}
 
 	rowsAffected, err := InsertData("users", data)
@@ -27,7 +28,7 @@ func RegisterUser(username string, password string) (int64, error) {
 }
 
 func AuthenticateUser(username string, password string) (*models.Token, error) {
-	fields := []string{"id", "username", "password"}
+	fields := []string{"username", "password", "role"}
 	whereCondition := "username =$1"
 	whereArgs := []interface{}{username}
 
@@ -42,12 +43,13 @@ func AuthenticateUser(username string, password string) (*models.Token, error) {
 
 	user := result[0]
 	storedPassword := user["password"].(string)
+	role := string(user["role"].([]uint8))
 
 	if err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password)); err != nil {
 		return nil, errors.New("invalid password")
 	}
 
-	token, err := middlewares.GenerateJWT(username)
+	token, err := middlewares.GenerateJWT(username, role)
 	if err != nil {
 		return nil, errors.New("failed to generate token")
 	}
