@@ -56,11 +56,11 @@ func InitDB() {
 	dbName := os.Getenv("DB_NAME")
 
 	// Debug: Test if variables are loaded
-    fmt.Println("DB_USER:", dbUser)
-	fmt.Println("DB_PASSWORD:", dbPassword)
-	fmt.Println("DB_HOST:", dbHost)
-	fmt.Println("DB_PORT:", dbPort)
-	fmt.Println("DB_NAME:", dbName)
+    // fmt.Println("DB_USER:", dbUser)
+	// fmt.Println("DB_PASSWORD:", dbPassword)
+	// fmt.Println("DB_HOST:", dbHost)
+	// fmt.Println("DB_PORT:", dbPort)
+	// fmt.Println("DB_NAME:", dbName)
 
 	// Ensure all necessary environment variables are set
 	if dbUser == "" || dbPassword == "" || dbHost == "" || dbPort == "" || dbName == "" {
