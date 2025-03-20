@@ -2,13 +2,27 @@ package services
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/NinePTH/GO_MVC-S/src/middlewares"
 	"github.com/NinePTH/GO_MVC-S/src/models"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func RegisterUser(username string, password string, role string) (int64, error) {
+func RegisterUser(username string, password string, role string, id int) (int64, error) {
+
+	fields := []string{"*"}
+
+	result, err := SelectData("Patient", fields, true, "patient_id = $1 AND user_id IS NULL", []interface{}{id})
+
+	if err != nil {
+		return 0, err
+	}
+
+	if len(result) == 0 {
+		return 0, fmt.Errorf("There is no patient with id %d or the patient has already been registered", id)
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return 0, err
@@ -24,6 +38,9 @@ func RegisterUser(username string, password string, role string) (int64, error) 
 	if err != nil {
 		return 0, err
 	}
+
+	// ทำให้มัน อัพเดต user_id ใน patient table
+
 	return rowsAffected, nil
 }
 

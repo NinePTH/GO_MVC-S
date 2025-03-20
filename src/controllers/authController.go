@@ -27,12 +27,12 @@ func Register(c echo.Context) error {
     var req login.RegisterRequest
 
     // Bind request JSON to struct
-    if err := c.Bind(&req); err != nil || req.Username == "" || req.Password == "" || req.Role == "" {
+    if err := c.Bind(&req); err != nil || req.Username == "" || req.Password == "" || req.Role == "" || req.Id < 1 {
         fmt.Println("Bind Error:", err)
         return c.JSON(http.StatusBadRequest, "Invalid request")
     }
 
-    _, err := services.RegisterUser(req.Username, req.Password, req.Role)
+    _, err := services.RegisterUser(req.Username, req.Password, req.Role, req.Id)
     if err != nil {
         return c.JSON(http.StatusInternalServerError, err.Error())
     }
