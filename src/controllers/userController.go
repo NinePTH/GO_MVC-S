@@ -2,14 +2,51 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/NinePTH/GO_MVC-S/src/services"
 
 	"github.com/labstack/echo/v4"
 )
 
+func UpdateUser(c echo.Context) error {
+	id := c.Param("id") // Get user ID from URL path
+	name := c.QueryParam("name")
+	ageStr := c.QueryParam("age")
+
+	// Convert age to integer
+	age, err := strconv.Atoi(ageStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid age format. Age must be an integer.")
+	}
+
+	// Ensure ID is provided
+	if id == "" {
+		return c.JSON(http.StatusBadRequest, "Missing user ID")
+	}
+
+	// Create a map with updated data
+	data := map[string]interface{}{
+		"name": name,
+		"age":  age,
+	}
+
+	// Call the service function
+	rowsAffected, err := services.UpdateUser(id, data)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	if rowsAffected == 0 {
+		return c.JSON(http.StatusOK, "No rows affected")
+	}
+
+	return c.JSON(http.StatusOK, "User updated successfully")
+}
+
+
 func GetUser(c echo.Context) error {
-	id := c.Param("id")	
+	id := c.Param("id")
 	user, err := services.GetUser(id)
 	if err != nil {
 		if err.Error() == "user not found" {

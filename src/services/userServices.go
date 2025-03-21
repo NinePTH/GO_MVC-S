@@ -6,6 +6,8 @@ import (
 	"github.com/NinePTH/GO_MVC-S/src/models"
 )
 
+
+
 func GetUser(id string) (*models.User, error) {
 	table := "users"
 	fields := []string{"id", "name", "age"}
@@ -77,6 +79,21 @@ func AddUser(data map[string]interface{}) (int64, error) {
 
 	return rowsAffected, nil
 }
+func UpdateUser(id string, data map[string]interface{}) (int64, error) {
+	table := "users"
+	condition := "id = $1"
+	conditionValues := []interface{}{id}
+
+	// Call UpdateData with correct parameters
+	rowsAffected, err := UpdateData(table, data, condition, conditionValues)
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}
+
+
 
 func DeleteUser(id string) (int64, error) {
 	table := "users"
