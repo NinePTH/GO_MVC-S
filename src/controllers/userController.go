@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/NinePTH/GO_MVC-S/src/services"
 
@@ -10,40 +9,35 @@ import (
 )
 
 func UpdateUser(c echo.Context) error {
-	id := c.Param("id") // Get user ID from URL path
-	name := c.QueryParam("name")
-	ageStr := c.QueryParam("age")
-
-	// Convert age to integer
-	age, err := strconv.Atoi(ageStr)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid age format. Age must be an integer.")
-	}
-
-	// Ensure ID is provided
+	// Get id, name, and age from query parameters
+	id := c.QueryParam("id") // Get the id from the query parameter
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, "Missing user ID")
 	}
 
-	// Create a map with updated data
+	name := c.QueryParam("name") // Get the name from the query parameter
+	age := c.QueryParam("age")   // Get the age from the query parameter
+
+	// Create the data map for the update
 	data := map[string]interface{}{
 		"name": name,
 		"age":  age,
 	}
 
-	// Call the service function
+	// Call the service function to update the user
 	rowsAffected, err := services.UpdateUser(id, data)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
+	// If no rows were affected (e.g., the user ID does not exist)
 	if rowsAffected == 0 {
 		return c.JSON(http.StatusOK, "No rows affected")
 	}
 
+	// If the update was successful
 	return c.JSON(http.StatusOK, "User updated successfully")
 }
-
 
 func GetUser(c echo.Context) error {
 	id := c.Param("id")
