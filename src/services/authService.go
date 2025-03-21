@@ -2,13 +2,27 @@ package services
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/NinePTH/GO_MVC-S/src/middlewares"
 	"github.com/NinePTH/GO_MVC-S/src/models"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func RegisterUser(username string, password string) (int64, error) {
+func RegisterUser(username string, password string, role string, id int) (int64, error) {
+
+	fields := []string{"*"}
+
+	result, err := SelectData("Patient", fields, true, "patient_id = $1 AND user_id IS NULL", []interface{}{id})
+
+	if err != nil {
+		return 0, err
+	}
+
+	if len(result) == 0 {
+		return 0, fmt.Errorf("There is no patient with id %d or the patient has already been registered", id)
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return 0, err
@@ -17,21 +31,25 @@ func RegisterUser(username string, password string) (int64, error) {
 	data := map[string]interface{}{
 		"username": username,
 		"password": string(hashedPassword),
+		"role": role,
 	}
 
 	rowsAffected, err := InsertData("users", data)
 	if err != nil {
 		return 0, err
 	}
+
+	// ทำให้มัน อัพเดต user_id ใน patient table
+
 	return rowsAffected, nil
 }
 
 func AuthenticateUser(username string, password string) (*models.Token, error) {
-	fields := []string{"id", "username", "password"}
+	fields := []string{"username", "password", "role"}
 	whereCondition := "username =$1"
 	whereArgs := []interface{}{username}
 
-	result, err := SelectData("users", fields, true, whereCondition, whereArgs,"id")
+	result, err := SelectData("users", fields, true, whereCondition, whereArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -42,12 +60,13 @@ func AuthenticateUser(username string, password string) (*models.Token, error) {
 
 	user := result[0]
 	storedPassword := user["password"].(string)
+	role := string(user["role"].([]uint8))
 
 	if err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password)); err != nil {
 		return nil, errors.New("invalid password")
 	}
 
-	token, err := middlewares.GenerateJWT(username)
+	token, err := middlewares.GenerateJWT(username, role)
 	if err != nil {
 		return nil, errors.New("failed to generate token")
 	}

@@ -1,6 +1,6 @@
-package models
+package login
 
-type AuthRequest struct {
+type LoginRequest struct {
     Username string `json:"username"`
     Password string `json:"password"`
 }
