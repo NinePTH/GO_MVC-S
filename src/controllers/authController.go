@@ -28,7 +28,7 @@ func Register(c echo.Context) error {
 
     // Bind request JSON to struct
     if err := c.Bind(&req); err != nil || req.Username == "" || req.Password == "" || req.Role == "" || req.Id == "" {
-        return c.JSON(http.StatusBadRequest, "Invalid request, username, password, role and id must be provided")
+        return c.JSON(http.StatusBadRequest, "Invalid request username, password, role and id must be provided")
     }
 
     _, err := services.RegisterUser(req.Username, req.Password, req.Role, req.Id)
@@ -51,7 +51,7 @@ func Login(c echo.Context) error {
 
     var req login.LoginRequest
     if err:= c.Bind(&req); err != nil || req.Username == "" || req.Password == "" {
-        return c.JSON(http.StatusBadRequest, "Invalid request")
+        return c.JSON(http.StatusBadRequest, "Invalid request username and password must be provided")
     }
 
     user, err := services.AuthenticateUser(req.Username, req.Password)
