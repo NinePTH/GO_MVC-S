@@ -27,7 +27,7 @@ func Register(c echo.Context) error {
     var req login.RegisterRequest
 
     // Bind request JSON to struct
-    if err := c.Bind(&req); err != nil || req.Username == "" || req.Password == "" || req.Role == "" || req.Id < 1 {
+    if err := c.Bind(&req); err != nil || req.Username == "" || req.Password == "" || req.Role == "" || req.Id == "" {
         return c.JSON(http.StatusBadRequest, "Invalid request, username, password, role and id must be provided")
     }
 

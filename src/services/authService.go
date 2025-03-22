@@ -9,11 +9,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func RegisterUser(username string, password string, role string, id int) (int64, error) {
+func RegisterUser(username string, password string, role string, id string) (int64, error) {
 
-	table := "Patient"
+	table := ""
 	fields := []string{"*"}
-	whereCondition := "patient_id = $1 AND user_id IS NULL"
+	whereCondition := ""
 
 	if role == "patient" {
 		table = "Patient"
@@ -46,9 +46,13 @@ func RegisterUser(username string, password string, role string, id int) (int64,
 		"role": role,
 	}
 
-	rowsAffected, err := InsertData("users", data)
+	insertResult, err := InsertData("users", data)
 	if err != nil {
 		return 0, err
+	}
+
+	if insertResult == 0 {
+		return 0, errors.New("Failed to insert user")
 	}
 
 	// ทำให้มัน อัพเดต user_id ใน patient table
@@ -66,13 +70,31 @@ func RegisterUser(username string, password string, role string, id int) (int64,
 		return 0, errors.New("user not found")
 	}
 
-	// user := result[0]
-	// userId := user["user_id"].(string)
+	user := result[0]
+	userId := user["user_id"].(int64)
 
 	// เรียก update user_id ใน patient table
 
+	if role == "patient" {
+		whereCondition = "patient_id = $1 AND user_id IS NULL"
+	} else if role == "HR" || role == "medical_personnel" {
+		whereCondition = "employee_id = $1 AND user_id IS NULL"
+	} else {
+		return 0, errors.New("Invalid role")
+	}
 
-	return rowsAffected, nil
+	whereArgs = []interface{}{id}
+
+	updateResult, err := UpdateData(table, map[string]interface{}{"user_id": userId}, whereCondition, whereArgs)
+	if err != nil {
+		return 0, err
+	}
+
+	if updateResult == 0 {
+		return 0, errors.New("Failed to update user_id")
+	}
+
+	return updateResult, nil
 }
 
 func AuthenticateUser(username string, password string) (*models.Token, error) {
