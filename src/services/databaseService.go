@@ -9,10 +9,6 @@ import (
 
 // select distinct,inner join ,etc.
 
-// เขียน updatedata ในนี้
-// เขียนคล้ายๆinsert แล้วดูว่าตัวไหนเปลี่ยนบ้าง
-
-// เขียนรับ parameter
 func SelectData(table string, fields []string, where bool, whereCon string, whereArgs []interface{}) ([]map[string]interface{}, error) {
 	var query string = "SELECT "
 
@@ -83,32 +79,42 @@ func SelectData(table string, fields []string, where bool, whereCon string, wher
 func UpdateData(table string, data map[string]interface{}, condition string, conditionValues []interface{}) (int64, error) {
 	var setClauses []string
 	var values []interface{}
-
-	// Build the SET clause dynamically
-	index := 1
-	for column, value := range data {
-		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", column, index))
-		values = append(values, value)
-		index++
-	}
-
-	// Append WHERE condition with correct index
-	query := fmt.Sprintf("UPDATE %s SET %s WHERE %s", table, strings.Join(setClauses, ", "), condition)
-
-	// Add condition values at the end
+	// Start by appending the values for condition
 	values = append(values, conditionValues...)
 
-	// Print query for debugging
+	// Construct the SET clause and add placeholders
+	// for example: "name = $1, age = $2"
+	for column, value := range data {
+		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", column, len(values)+1))
+		values = append(values, value)
+	}
+
+	// Construct the full query with the correct placeholders for PostgreSQL
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE %s", table, strings.Join(setClauses, ", "), condition)
+
 	fmt.Println("Executing query:", query)
 	fmt.Println("With values:", values)
 
-	// Execute query
-	result, err := databaseConnector.DB.Exec(query, values...)
+	// Prepare the statement
+	stmt, err := databaseConnector.DB.Prepare(query)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	// Execute the statement
+	result, err := stmt.Exec(values...)
 	if err != nil {
 		return 0, err
 	}
 
-	return result.RowsAffected()
+	// Get the number of rows affected
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
 }
 
 
