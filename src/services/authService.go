@@ -32,7 +32,7 @@ func RegisterUser(username string, password string, role string, id string) (int
 	}
 
 	if len(result) == 0 {
-		return 0, fmt.Errorf("There is no patient with id %d or the patient has already been registered", id)
+		return 0, fmt.Errorf("There is no patient with id %s or the patient has already been registered", id)
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
