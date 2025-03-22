@@ -16,6 +16,13 @@ func UpdateUser(c echo.Context) error {
 
 	name := c.QueryParam("name") // Get the name from the query parameter
 	age := c.QueryParam("age")   // Get the age from the query parameter
+	//ดัก null
+	if name == "" {   
+		return c.JSON(http.StatusBadRequest, "Missing User Name")
+	}
+	if age == "" {
+		return c.JSON(http.StatusBadRequest, "Missing Age")
+	}
 
 	// Create the data map for the update
 	data := map[string]interface{}{
@@ -34,8 +41,6 @@ func UpdateUser(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, "User updated successfully")
 }
-
-
 
 func GetUser(c echo.Context) error {
 	id := c.Param("id")
