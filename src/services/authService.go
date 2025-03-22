@@ -67,7 +67,7 @@ func RegisterUser(username string, password string, role string, id string) (int
 	}
 
 	if len(result) == 0{
-		return 0, errors.New("user not found")
+		return 0, errors.New("User not found")
 	}
 
 	user := result[0]
@@ -108,7 +108,7 @@ func AuthenticateUser(username string, password string) (*models.Token, error) {
 	}
 
 	if len(result) == 0{
-		return nil, errors.New("user not found")
+		return nil, errors.New("User not found")
 	}
 
 	user := result[0]
@@ -121,7 +121,7 @@ func AuthenticateUser(username string, password string) (*models.Token, error) {
 
 	token, err := middlewares.GenerateJWT(username, role)
 	if err != nil {
-		return nil, errors.New("failed to generate token")
+		return nil, errors.New("Failed to generate token")
 	}
 
 	return &models.Token{
