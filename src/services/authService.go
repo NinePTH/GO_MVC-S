@@ -53,6 +53,25 @@ func RegisterUser(username string, password string, role string, id int) (int64,
 
 	// ทำให้มัน อัพเดต user_id ใน patient table
 
+	fields = []string{"user_id", "username"}
+	whereCondition = "username =$1"
+	whereArgs := []interface{}{username}
+
+	result, err = SelectData("users", fields, true, whereCondition, whereArgs)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(result) == 0{
+		return 0, errors.New("user not found")
+	}
+
+	// user := result[0]
+	// userId := user["user_id"].(string)
+
+	// เรียก update user_id ใน patient table
+
+
 	return rowsAffected, nil
 }
 

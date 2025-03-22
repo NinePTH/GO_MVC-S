@@ -9,7 +9,7 @@ CREATE TABLE Users (
 CREATE TYPE blood_group AS ENUM ('A', 'B', 'AB', 'O');
 CREATE TYPE sex AS ENUM ('male', 'female');
 CREATE TABLE Patient (
-    patient_id SERIAL PRIMARY KEY,
+    patient_id VARCHAR(4) PRIMARY KEY,
     user_id INT UNIQUE,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
@@ -24,7 +24,8 @@ CREATE TABLE Patient (
     id_card_number VARCHAR(13) NOT NULL,
     ongoing_treatment VARCHAR(50) NOT NULL,
      FOREIGN KEY (user_id) REFERENCES Users(user_id),
-    CHECK (phone_number ~ '^[0-9]+$')
+    CHECK (phone_number ~ '^[0-9]+$'),
+	UNIQUE (first_name, last_name)
 );
 
 INSERT INTO Users (username, password, role)
@@ -34,17 +35,17 @@ VALUES
 ('hr_admin', 'hashed_password_3', 'HR');
 
 INSERT INTO Patient (
-     first_name, last_name, age, date_of_birth, gender,
+    patient_id, first_name, last_name, age, date_of_birth, gender,
     blood_type, email, health_insurance, address, phone_number,
     id_card_number, ongoing_treatment
 )
 VALUES
-( 'John', 'Doe', 30, '1994-05-15', 'male', 'A', 
+( 'P001', 'John', 'Doe', 30, '1994-05-15', 'male', 'A', 
  'john.doe@example.com', TRUE, '123 Main St, Cityville', 
  '0123456789', '1234567890123', 'Hypertension'),
-( 'Jane', 'Smith', 45, '1979-11-22', 'female', 'B',
+( 'P002', 'Jane', 'Smith', 45, '1979-11-22', 'female', 'B',
  'jane.smith@example.com', FALSE, '456 Oak Ave, Townsville', 
  '0987654321', '3210987654321', 'Diabetes'),
-( 'Mary', 'Johnson', 25, '1999-08-10', 'female', 'O',
+( 'P003', 'Mary', 'Johnson', 25, '1999-08-10', 'female', 'O',
  'mary.johnson@example.com', TRUE, '789 Pine Rd, Villagetown', 
  '0876543210', '6543210987654', 'Healthy');
