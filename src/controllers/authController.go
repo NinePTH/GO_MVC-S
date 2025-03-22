@@ -28,8 +28,7 @@ func Register(c echo.Context) error {
 
     // Bind request JSON to struct
     if err := c.Bind(&req); err != nil || req.Username == "" || req.Password == "" || req.Role == "" || req.Id < 1 {
-        fmt.Println("Bind Error:", err)
-        return c.JSON(http.StatusBadRequest, "Invalid request")
+        return c.JSON(http.StatusBadRequest, "Invalid request, username, password, role and id must be provided")
     }
 
     _, err := services.RegisterUser(req.Username, req.Password, req.Role, req.Id)

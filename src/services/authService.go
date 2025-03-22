@@ -11,9 +11,21 @@ import (
 
 func RegisterUser(username string, password string, role string, id int) (int64, error) {
 
+	table := "Patient"
 	fields := []string{"*"}
+	whereCondition := "patient_id = $1 AND user_id IS NULL"
 
-	result, err := SelectData("Patient", fields, true, "patient_id = $1 AND user_id IS NULL", []interface{}{id})
+	if role == "patient" {
+		table = "Patient"
+		whereCondition = "patient_id = $1 AND user_id IS NULL"
+	} else if role == "HR" || role == "medical_personnel" {
+		table = "Employee"
+		whereCondition = "employee_id = $1 AND user_id IS NULL"
+	} else {
+		return 0, errors.New("Invalid role")
+	}
+
+	result, err := SelectData(table, fields, true, whereCondition, []interface{}{id})
 
 	if err != nil {
 		return 0, err
