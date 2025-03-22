@@ -23,7 +23,7 @@ CREATE TABLE Patient (
     phone_number VARCHAR(15) NOT NULL,
     id_card_number VARCHAR(13) NOT NULL,
     ongoing_treatment VARCHAR(50) NOT NULL,
-     FOREIGN KEY (user_id) REFERENCES Users(user_id),
+     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL,
     CHECK (phone_number ~ '^[0-9]+$'),
 	UNIQUE (first_name, last_name)
 );
