@@ -9,11 +9,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func RegisterUser(username string, password string, role string, id int) (int64, error) {
+func RegisterUser(username string, password string, role string, id string) (int64, error) {
 
-	table := "Patient"
+	table := ""
 	fields := []string{"*"}
-	whereCondition := "patient_id = $1 AND user_id IS NULL"
+	whereCondition := ""
 
 	if role == "patient" {
 		table = "Patient"
@@ -32,7 +32,7 @@ func RegisterUser(username string, password string, role string, id int) (int64,
 	}
 
 	if len(result) == 0 {
-		return 0, fmt.Errorf("There is no patient with id %d or the patient has already been registered", id)
+		return 0, fmt.Errorf("There is no patient with id %s or the patient has already been registered", id)
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -46,14 +46,55 @@ func RegisterUser(username string, password string, role string, id int) (int64,
 		"role": role,
 	}
 
-	rowsAffected, err := InsertData("users", data)
+	insertResult, err := InsertData("users", data)
 	if err != nil {
 		return 0, err
 	}
 
+	if insertResult == 0 {
+		return 0, errors.New("Failed to insert user")
+	}
+
 	// ทำให้มัน อัพเดต user_id ใน patient table
 
-	return rowsAffected, nil
+	fields = []string{"user_id", "username"}
+	whereCondition = "username =$1"
+	whereArgs := []interface{}{username}
+
+	result, err = SelectData("users", fields, true, whereCondition, whereArgs)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(result) == 0{
+		return 0, errors.New("User not found")
+	}
+
+	user := result[0]
+	userId := user["user_id"].(int64)
+
+	// เรียก update user_id ใน patient table
+
+	if role == "patient" {
+		whereCondition = "patient_id = $1 AND user_id IS NULL"
+	} else if role == "HR" || role == "medical_personnel" {
+		whereCondition = "employee_id = $1 AND user_id IS NULL"
+	} else {
+		return 0, errors.New("Invalid role")
+	}
+
+	whereArgs = []interface{}{id}
+
+	updateResult, err := UpdateData(table, map[string]interface{}{"user_id": userId}, whereCondition, whereArgs)
+	if err != nil {
+		return 0, err
+	}
+
+	if updateResult == 0 {
+		return 0, errors.New("Failed to update user_id")
+	}
+
+	return updateResult, nil
 }
 
 func AuthenticateUser(username string, password string) (*models.Token, error) {
@@ -67,7 +108,7 @@ func AuthenticateUser(username string, password string) (*models.Token, error) {
 	}
 
 	if len(result) == 0{
-		return nil, errors.New("user not found")
+		return nil, errors.New("User not found")
 	}
 
 	user := result[0]
@@ -80,7 +121,7 @@ func AuthenticateUser(username string, password string) (*models.Token, error) {
 
 	token, err := middlewares.GenerateJWT(username, role)
 	if err != nil {
-		return nil, errors.New("failed to generate token")
+		return nil, errors.New("Failed to generate token")
 	}
 
 	return &models.Token{
