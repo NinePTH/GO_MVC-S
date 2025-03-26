@@ -9,6 +9,6 @@ func UserRoutes(e *echo.Echo) {
 	e.GET("/users/:id", controllers.GetUser)
 	e.GET("/users", controllers.GetAllUsers)
 	e.POST("/users", controllers.AddUser)
-	e.DELETE("/users/:id", controllers.DeleteUser)
 	e.PUT("/users", controllers.UpdateUser)
+	e.DELETE("/users/:id", controllers.DeleteUser)
 }

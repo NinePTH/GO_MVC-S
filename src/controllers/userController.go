@@ -1,12 +1,17 @@
 package controllers
 
 import (
+
 	"net/http"
 
 	"github.com/NinePTH/GO_MVC-S/src/services"
 
 	"github.com/labstack/echo/v4"
 )
+
+
+
+
 
 func UpdateUser(c echo.Context) error {
 	id := c.QueryParam("id") // Get the user ID from the query parameter
@@ -17,7 +22,7 @@ func UpdateUser(c echo.Context) error {
 	name := c.QueryParam("name") // Get the name from the query parameter
 	age := c.QueryParam("age")   // Get the age from the query parameter
 	//ดัก null
-	if name == "" {   
+	if name == "" {
 		return c.JSON(http.StatusBadRequest, "Missing User Name")
 	}
 	if age == "" {
