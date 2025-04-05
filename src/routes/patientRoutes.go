@@ -12,4 +12,5 @@ func PatientRoutes(e *echo.Echo) {
 	protected.Use(middlewares.JWTMiddleware()) // Apply JWT middleware
 
 	protected.GET("", controllers.GetAllPatients) // Protected route
+	protected.GET("/:id", controllers.GetPatient) // Protected route
 }

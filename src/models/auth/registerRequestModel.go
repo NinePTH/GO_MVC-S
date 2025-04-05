@@ -1,4 +1,4 @@
-package login
+package auth
 
 type RegisterRequest struct {
     Username string `json:"username"`

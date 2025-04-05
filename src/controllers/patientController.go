@@ -8,6 +8,18 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func GetPatient(c echo.Context) error {
+	id := c.Param("id")
+	user, err := services.GetPatient(id)
+	if err != nil {
+		if err.Error() == "user not found" {
+			return c.JSON(http.StatusNoContent, err.Error())
+		}
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, user)
+}
+
 func GetAllPatients(c echo.Context) error {
 	patient, err := services.GetAllPatients()
 	if err != nil {

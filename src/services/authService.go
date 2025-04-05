@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/NinePTH/GO_MVC-S/src/middlewares"
-	"github.com/NinePTH/GO_MVC-S/src/models"
+	"github.com/NinePTH/GO_MVC-S/src/models/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -97,21 +97,22 @@ func RegisterUser(username string, password string, role string, id string) (int
 	return updateResult, nil
 }
 
-func AuthenticateUser(username string, password string) (*models.Token, error) {
-	fields := []string{"username", "password", "role"}
+func AuthenticateUser(username string, password string) (*auth.Token, error) {
+	fields := []string{"user_id", "username", "password", "role"}
 	whereCondition := "username =$1"
 	whereArgs := []interface{}{username}
 
-	result, err := SelectData("users", fields, true, whereCondition, whereArgs)
+	userQueryResult, err := SelectData("users", fields, true, whereCondition, whereArgs)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(result) == 0{
+	if len(userQueryResult) == 0{
 		return nil, errors.New("User not found")
 	}
 
-	user := result[0]
+	user := userQueryResult[0]
+	userId := user["user_id"].(int64)
 	storedPassword := user["password"].(string)
 	role := string(user["role"].([]uint8))
 
@@ -119,12 +120,43 @@ func AuthenticateUser(username string, password string) (*models.Token, error) {
 		return nil, errors.New("invalid password")
 	}
 
-	token, err := middlewares.GenerateJWT(username, role)
+	if (role == "patient") {
+		fields := []string{"patient_id"}
+		whereCondition = "user_id = $1"
+		whereArgs = []interface{}{userId}
+		patientQueryResult, err := SelectData("Patient", fields, true, whereCondition, whereArgs)
+		if err != nil {
+			return nil, err
+		}
+
+		patientId := patientQueryResult[0]["patient_id"].(string)
+
+		generateJWTParam := auth.GenerateJWTClaimsParams{
+			Username: username,
+			Role:     role,
+			PatientID: patientId,
+		}
+		token, err := middlewares.GenerateJWT(generateJWTParam)
+		if err != nil {
+			return nil, errors.New("Failed to generate token")
+		}
+
+		return &auth.Token{
+			Token: token,
+		}, nil
+	}
+
+	generateJWTParam := auth.GenerateJWTClaimsParams{
+		Username: username,
+		Role:     role,
+	}
+
+	token, err := middlewares.GenerateJWT(generateJWTParam)
 	if err != nil {
 		return nil, errors.New("Failed to generate token")
 	}
 
-	return &models.Token{
+	return &auth.Token{
 		Token: token,
 	}, nil
 }
