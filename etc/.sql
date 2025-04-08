@@ -28,6 +28,15 @@ CREATE TABLE Patient (
 	UNIQUE (first_name, last_name)
 );
 
+CREATE TABLE Medical_history (
+	medical_history_id SERIAL PRIMARY KEY,
+	patient_id VARCHAR(4) NOT NULL,
+	detail TEXT NOT NULL,
+	time TIME NOT NULL,
+	date date NOT NULL,
+	FOREIGN KEY (patient_id) REFERENCES Patient(patient_id)
+);
+
 INSERT INTO Users (username, password, role)
 VALUES
 ('john_doe', 'hashed_password_1', 'patient'),
@@ -49,3 +58,6 @@ VALUES
 ( 'P003', 'Mary', 'Johnson', 25, '1999-08-10', 'female', 'O',
  'mary.johnson@example.com', TRUE, '789 Pine Rd, Villagetown', 
  '0876543210', '6543210987654', 'Healthy');
+
+ INSERT INTO Medical_history (patient_id, detail, time, date)
+VALUES ('P001', 'Fever and headache and maybe kys', '10:30:00', '2025-04-08');
