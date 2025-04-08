@@ -117,7 +117,7 @@ func AuthenticateUser(username string, password string) (*auth.Token, error) {
 	role := string(user["role"].([]uint8))
 
 	if err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password)); err != nil {
-		return nil, errors.New("invalid password")
+		return nil, errors.New("Invalid password")
 	}
 
 	if (role == "patient") {
