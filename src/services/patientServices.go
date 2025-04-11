@@ -6,6 +6,17 @@ import (
 	"github.com/NinePTH/GO_MVC-S/src/models"
 )
 
+
+
+func AddPatient(data map[string]interface{}) (int64, error) {
+	table := "Patient"
+	rowsAffected, err := InsertData(table, data)
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}
 func GetPatient(id string) (*models.Patient, error) {
 	table := "Patient"
 	fields := []string{"*"}
