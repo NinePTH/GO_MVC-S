@@ -2,7 +2,7 @@
 package models
 
 type Patient struct {
-	Patient_id         int    `json:"patient_id "`
+	Patient_id         string    `json:"patient_id"`
 	First_name      string `json:"first_name"`
 	Last_name   string `json:"last_name"`
 	Age       int    `json:"age"`

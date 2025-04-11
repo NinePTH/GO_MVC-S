@@ -8,15 +8,17 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
+	"github.com/NinePTH/GO_MVC-S/src/models/auth"
 )
 
 var jwtSecret = []byte("supersecretkey")
 
 // Generate JWT Token
-func GenerateJWT(username string, role string) (string, error) {
+func GenerateJWT(userInfo auth.GenerateJWTClaimsParams) (string, error) {
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-        "username": username,
-        "role": role,
+        "username": userInfo.Username,
+        "role": userInfo.Role,
+		"patient_id": userInfo.PatientID, // If user is not patient, this will be empty
         "exp":      time.Now().Add(time.Hour * 24).Unix(),
     })
     return token.SignedString(jwtSecret)
