@@ -13,4 +13,5 @@ func PatientRoutes(e *echo.Echo) {
 	protected.GET("", controllers.GetAllPatients) // Protected route
 	protected.GET("/:id", controllers.GetPatient) // Protected route
 	protected.POST("", controllers.AddPatient) // Protected route
+	protected.PUT("",controllers.UpdatePatient) //Protected route
 }
