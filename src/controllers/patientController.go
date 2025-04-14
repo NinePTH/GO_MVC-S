@@ -7,17 +7,18 @@ import (
 
 	"github.com/labstack/echo/v4"
 )
-func UpdatePatient(c echo.Context) error{
+
+func UpdatePatient(c echo.Context) error {
 	patient_id := c.QueryParam("patient_id")
 
 	if patient_id == "" {
 		return c.JSON(http.StatusBadRequest, "Missing user ID")
 	}
-	
+
 	first_name := c.QueryParam("first_name")
 	last_name := c.QueryParam("last_name")
 	age := c.QueryParam("age")
-	date_of_birth := c.QueryParam("date_of_birth") 
+	date_of_birth := c.QueryParam("date_of_birth")
 	gender := c.QueryParam("gender")
 	blood_type := c.QueryParam("blood_type")
 	email := c.QueryParam("email")
@@ -66,8 +67,8 @@ func UpdatePatient(c echo.Context) error{
 	// แปลง health_insurance จาก string -> bool
 	insuranceBool := false
 	if health_insurance == "true" {
-	insuranceBool = true
-    }
+		insuranceBool = true
+	}
 
 	data := map[string]interface{}{
 		"patient_id":        patient_id,
@@ -100,7 +101,7 @@ func AddPatient(c echo.Context) error {
 	first_name := c.QueryParam("first_name")
 	last_name := c.QueryParam("last_name")
 	age := c.QueryParam("age")
-	date_of_birth := c.QueryParam("date_of_birth") 
+	date_of_birth := c.QueryParam("date_of_birth")
 	gender := c.QueryParam("gender")
 	blood_type := c.QueryParam("blood_type")
 	email := c.QueryParam("email")
@@ -132,7 +133,7 @@ func AddPatient(c echo.Context) error {
 		"ongoing_treatment": ongoing_treatment,
 	}
 
-	rowsAffected, err := services.UpdatePatient(patient_id,data)
+	rowsAffected, err := services.UpdatePatient(patient_id, data)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -156,9 +157,9 @@ func GetPatient(c echo.Context) error {
 }
 
 func GetAllPatients(c echo.Context) error {
-	patient, err := services.GetAllPatients()
+	employee, err := services.GetAllPatients()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, patient)
+	return c.JSON(http.StatusOK, employee)
 }

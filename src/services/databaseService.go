@@ -8,6 +8,82 @@ import (
 )
 
 // select distinct,inner join ,etc.
+func SelectInnerJoin(
+	mainTable string,
+	joinTable string,
+	joinCondition string,
+	fields []string,
+	where bool,
+	whereCon string,
+	whereArgs []interface{},
+) ([]map[string]interface{}, error) {
+
+	// เริ่มสร้าง query
+	var query string = "SELECT "
+
+	// เติม field ที่ต้องการ
+	for _, field := range fields {
+		query += field + ", "
+	}
+	query = strings.TrimRight(query, ", ")
+	query += " FROM " + mainTable
+
+	// ถ้า joinCondition ว่าง แปลว่าเขียน join ทั้งหมดไว้ใน joinTable แล้ว
+	if joinCondition != "" {
+		query += " INNER JOIN " + joinTable + " ON " + joinCondition
+	} else {
+		query += " INNER JOIN " + joinTable
+	}
+
+	// ถ้ามีเงื่อนไข WHERE
+	if where {
+		query += " WHERE " + whereCon
+	}
+
+	// log query
+	fmt.Println("Executing query:", query)
+
+	// run query
+	rows, err := databaseConnector.DB.Query(query, whereArgs...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePointers := make([]interface{}, len(columns))
+		for i := range values {
+			valuePointers[i] = &values[i]
+		}
+
+		if err := rows.Scan(valuePointers...); err != nil {
+			return nil, err
+		}
+
+		rowMap := make(map[string]interface{})
+		for i, column := range columns {
+			rowMap[column] = values[i]
+		}
+		results = append(results, rowMap)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("results = %v\n\n", results)
+	return results, nil
+}
+
+
 
 func SelectData(table string, fields []string, where bool, whereCon string, whereArgs []interface{}) ([]map[string]interface{}, error) {
 	var query string = "SELECT "
