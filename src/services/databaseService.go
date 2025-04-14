@@ -7,18 +7,9 @@ import (
 	"github.com/NinePTH/GO_MVC-S/src/utils/databaseConnector"
 )
 
-// select distinct,inner join ,etc.
-func SelectInnerJoin(
-	mainTable string,
-	joinTable string,
-	joinCondition string,
-	fields []string,
-	where bool,
-	whereCon string,
-	whereArgs []interface{},
-) ([]map[string]interface{}, error) {
+// select distinct,etc.
+func SelectInnerJoin(mainTable string,joinTable string,joinCondition string,fields []string,where bool,whereCon string,whereArgs []interface{},) ([]map[string]interface{}, error) {
 
-	// เริ่มสร้าง query
 	var query string = "SELECT "
 
 	// เติม field ที่ต้องการ
