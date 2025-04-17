@@ -7,6 +7,7 @@ type Patient struct {
 	Last_name   string `json:"last_name"`
 	Age       int    `json:"age"`
 	Gender   string `json:"gender"`
+	Date_of_birth string `json:"date_of_birth"`
 	Blood_type  string `json:"blood_type"`
 	Email string `json:"email"`
 	Health_insurance bool `json:"health_insurance"`

@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/NinePTH/GO_MVC-S/src/models"
 )
@@ -25,6 +26,7 @@ func GetPatient(id string) (*models.Patient, error) {
 	last_name := result[0]["last_name"].(string)
 	age := int(result[0]["age"].(int64))
 	gender := string(result[0]["gender"].([]uint8))
+	date_of_birth := string(result[0]["date_of_birth"].(time.Time).Format("02-01-2006"))
 	blood_type := string(result[0]["blood_type"].([]uint8))
 	email := result[0]["email"].(string)
 	health_insurance := result[0]["health_insurance"].(bool)
@@ -39,6 +41,7 @@ func GetPatient(id string) (*models.Patient, error) {
 		Last_name:         last_name,
 		Age:               age,
 		Gender:            gender,
+		Date_of_birth:     date_of_birth,
 		Blood_type:        blood_type,
 		Email:             email,
 		Health_insurance:  health_insurance,
