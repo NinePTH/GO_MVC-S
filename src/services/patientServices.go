@@ -95,3 +95,13 @@ func GetAllPatients() ([]models.Patient, error) {
 	fmt.Println(patients)
 	return patients, nil
 }
+
+func AddPatient(patientInformation map[string]interface{}) (int64, error) {
+	table := "Patient"
+	rowsAffected, err := InsertData(table, patientInformation)
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}
