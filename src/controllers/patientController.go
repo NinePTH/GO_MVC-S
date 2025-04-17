@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/NinePTH/GO_MVC-S/src/models"
+	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 	"github.com/NinePTH/GO_MVC-S/src/services"
 
 	"github.com/labstack/echo/v4"
@@ -42,7 +42,7 @@ func AddPatient(c echo.Context) error {
      fmt.Println("Raw Request Body:", string(body))
      c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body for Bind()
 
-    var req models.AddPatient
+    var req patients.AddPatient
     if err:= c.Bind(&req); err != nil || req.Patient_id == "" || req.First_name == "" || req.Last_name == "" || req.Age == 0 || req.Gender == "" || req.Date_of_birth == "" || req.Blood_type == "" || req.Email == "" || req.Address == "" || req.Phone_number == "" || req.Id_card_number == "" || req.Ongoing_treatment == "" {
         return c.JSON(http.StatusBadRequest, "Invalid request, all information must be provided")
     }

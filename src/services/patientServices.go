@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/NinePTH/GO_MVC-S/src/models"
+	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 )
 
-func GetPatient(id string) (*models.Patient, error) {
+func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	table := "Patient"
 	fields := []string{"*"}
 
@@ -35,7 +35,7 @@ func GetPatient(id string) (*models.Patient, error) {
 	id_card_number := result[0]["id_card_number"].(string)
 	ongoing_treatment := result[0]["ongoing_treatment"].(string)
 
-	var patient = models.Patient{
+	var patient = patients.GeneralPatientInformation{
 		Patient_id:        patient_id,
 		First_name:        first_name,
 		Last_name:         last_name,
@@ -51,16 +51,43 @@ func GetPatient(id string) (*models.Patient, error) {
 		Ongoing_treatment: ongoing_treatment,
 	}
 
-	return &patient, nil
+	table = "Medical_history"
+	fields = []string{"*"}
+
+	result, err = SelectData(table, fields, true, "patient_id = $1", []interface{}{id})
+
+	if err != nil {
+		return nil, err
+	}
+
+	var medical_history []patients.MedicalHistory
+	for _, row := range result {
+		details := row["detail"].(string)
+		date := string(row["date"].(time.Time).Format("02-01-2006"))
+		time := string(row["time"].(time.Time).Format("02:01:00"))
+
+		medical_history = append(medical_history, patients.MedicalHistory{
+			Details: details,
+			Date:    date,
+			Time:    time,
+		})
+	}
+
+	var response = patients.GetPatientResponse{
+		PatientGeneralInfo: patient,
+		PatientMedicalHistory: medical_history,
+	}
+
+	return &response, nil
 }
 
-func GetAllPatients() ([]models.Patient, error) {
+func GetAllPatients() ([]patients.GeneralPatientInformation, error) {
 	fields := []string{"*"}
 	results, err := SelectData("Patient", fields, false, "", nil)
 	if err != nil {
 		return nil, err
 	}
-	var patients []models.Patient
+	var patientList []patients.GeneralPatientInformation
 	for _, row := range results {
 		patient_id := row["patient_id"].(string)
 		first_name := row["first_name"].(string)
@@ -75,7 +102,7 @@ func GetAllPatients() ([]models.Patient, error) {
 		id_card_number := row["id_card_number"].(string)
 		ongoing_treatment := row["ongoing_treatment"].(string)
 
-		patient := models.Patient{
+		patient := patients.GeneralPatientInformation{
 			Patient_id:        patient_id,
 			First_name:        first_name,
 			Last_name:         last_name,
@@ -89,11 +116,11 @@ func GetAllPatients() ([]models.Patient, error) {
 			Id_card_number:    id_card_number,
 			Ongoing_treatment: ongoing_treatment,
 		}
-		patients = append(patients, patient)
+		patientList = append(patientList, patient)
 		fmt.Println(patient)
 	}
-	fmt.Println(patients)
-	return patients, nil
+	fmt.Println(patientList)
+	return patientList, nil
 }
 
 func AddPatient(patientInformation map[string]interface{}) (int64, error) {

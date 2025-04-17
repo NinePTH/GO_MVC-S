@@ -1,5 +1,5 @@
 // hospital patient database
-package models
+package patients
 
 type AddPatient struct {
 	Patient_id         string    `json:"patient_id"`
