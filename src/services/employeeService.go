@@ -9,6 +9,29 @@ import (
 	"github.com/NinePTH/GO_MVC-S/src/models"
 )
 
+func UpdateEmployee(id string, data map[string]interface{}) (int64, error) {
+	table := "Employee"
+	condition := "employee_id = $1"
+	conditionValues := []interface{}{id}
+
+	// Call UpdateData with correct parameters
+	rowsAffected, err := UpdateData(table, data, condition, conditionValues)
+	if err != nil {
+		return 0, err
+	}
+	return rowsAffected, nil
+}
+
+func AddEmployee(data map[string]interface{}) (int64, error) {
+	table := "Employee"
+	rowsAffected, err := InsertData(table, data)
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}
+
 func GetEmployee(employeeID string) (*models.Employee, error) {
 	fields := []string{
 		"Employee.employee_id",

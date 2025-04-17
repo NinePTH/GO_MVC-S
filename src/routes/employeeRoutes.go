@@ -8,9 +8,9 @@ import (
 
 func EmployeeRoutes(e *echo.Echo) {
 	protected := e.Group("/employee")
-	protected.Use(middlewares.JWTMiddleware())
-	protected.GET("", controllers.GetAllEmployee) // Display all employee
-	protected.GET("/:id", controllers.GetEmployee) //Display employee by id
-	protected.POST("", controllers.UpdateEmployee) //update employee data
-	 
+	protected.Use(middlewares.JWTMiddleware()) // Apply JWT middleware (protected route)
+	protected.GET("", controllers.GetAllEmployee) // Display all employee info
+	protected.GET("/:id", controllers.GetEmployee) //Display employee info by id
+	protected.POST("", controllers.AddEmployee) //Add employee info	
+	protected.PUT("/:id", controllers.UpdateEmployee) //Update Employee info
 }
