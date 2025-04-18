@@ -100,24 +100,32 @@ INSERT INTO Position Values
 ('P010','D010','Doctor')
 
 CREATE TYPE status AS ENUM ('yes','no');
+
 CREATE TABLE Employee(
-employee_id VARCHAR(4) PRIMARY KEY,
-user_id INT,
-first_name VARCHAR(100) NOT NULL,
-last_name VARCHAR(100) NOT NULL,
-position_id VARCHAR(4),
-phone_number VARCHAR(15) NOT NULL, 
-department_id VARCHAR(4),
-salary DECIMAL(10,2) NOT NULL,
-email VARCHAR(50) UNIQUE NOT NULL,
-hire_date date NOT NULL,
-resignation_date date,
-work_status status NOT NULL DEFAULT 'yes',
-FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL,
-FOREIGN KEY (position_id) REFERENCES Position(position_id) ON DELETE SET NULL,
-FOREIGN KEY (department_id) REFERENCES Department(department_id) ON DELETE SET NULL,
-CHECK (phone_number ~ '^[0-9]+$'),
-UNIQUE (first_name, last_name)
+    employee_id VARCHAR(4) PRIMARY KEY,
+    user_id INT,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    position_id VARCHAR(4),
+    phone_number VARCHAR(15) NOT NULL, 
+    department_id VARCHAR(4),
+    salary DECIMAL(10,2) NOT NULL,
+    email VARCHAR(50) UNIQUE NOT NULL,
+    hire_date DATE NOT NULL,
+    resignation_date DATE,
+    work_status status NOT NULL DEFAULT 'yes',
+    
+    -- Constraints
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL,
+    FOREIGN KEY (position_id) REFERENCES Position(position_id) ON DELETE SET NULL,
+    FOREIGN KEY (department_id) REFERENCES Department(department_id) ON DELETE SET NULL,
+    
+    CHECK (phone_number ~ '^[0-9]+$'),
+    CHECK (
+        resignation_date IS NULL OR resignation_date > hire_date
+    ),
+    
+    UNIQUE (first_name, last_name)
 );
 
 INSERT INTO Employee VALUES
@@ -125,3 +133,92 @@ INSERT INTO Employee VALUES
 ('E002',2, 'Dim', 'Smith', 'P002', '0823456789', 'D002', 50000.00, 'bob.chan@example.com', '2021-06-10', '2023-08-01', 'no'),
 ('E003',3, 'Jimmy', 'Tompson', 'P003', '0834567890', 'D003', 52000.00, 'cindy.liu@example.com', '2023-02-20', NULL, 'yes'),
 ('E004',4, 'Brook', 'Sudlor', 'P004', '0845678901', 'D004', 48000.00, 'david.ng@example.com', '2020-12-01', '2024-03-15', 'no');
+
+
+CREATE TABLE Patient_Appointment (
+    appointment_id SERIAL PRIMARY KEY,
+    patient_id VARCHAR(4) NOT NULL,
+    time TIME NOT NULL,
+    date DATE NOT NULL,
+    topic TEXT NOT NULL,
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id)
+);
+
+INSERT INTO Patient_Appointment (appointment_id, patient_id, time, date, topic) VALUES
+(1, 'P001', '11:30:00', '2025-05-15', 'Food restrict'),
+(2, 'P002', '09:30:00', '2025-05-16', 'Annual check-up'),
+(3, 'P003', '14:00:00', '2025-05-17', 'Follow-up consultation'),
+(4, 'P004', '11:15:00', '2025-05-18', 'Blood test results discussion');
+
+CREATE TABLE Disease (
+    disease_id VARCHAR(4) PRIMARY KEY, 
+    disease_name VARCHAR(100) NOT NULL, 
+    UNIQUE(disease_name) 
+);
+
+INSERT INTO Disease VALUES
+('I001', 'streptococcus pneumoniae'),
+('I002', 'tuberculosis'),
+('I003', 'hepatitis B'),
+('I004', 'malaria'),
+('I005', 'dengue fever'),
+('I006', 'measles'),
+('I007', 'influenza'),
+('I008', 'cholera'),
+('I009', 'typhoid fever'),
+('I010', 'rabies'),
+('I011', 'meningitis');
+
+
+CREATE TABLE Patient_chronic_disease (
+    id SERIAL PRIMARY KEY,
+    patient_id VARCHAR(4) NOT NULL,
+    disease_id VARCHAR(4) NOT NULL,
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id),
+    FOREIGN KEY (disease_id) REFERENCES Disease(disease_id),
+    UNIQUE (patient_id, disease_id)
+);
+
+INSERT INTO Patient_chronic_disease VALUES
+(1, 'P001', 'I001'),
+(2, 'P001', 'I003'),
+(3, 'P002', 'I002'),
+(4, 'P003', 'I004'),
+(5, 'P004', 'I005')
+
+
+CREATE TABLE drug (
+    drug_id VARCHAR(4) PRIMARY KEY, 
+    drug_name VARCHAR(100) NOT NULL, 
+    UNIQUE(drug_name) 
+);
+
+INSERT INTO drug VALUES
+('R001', 'anti bacteria'),
+('R002', 'paracetamol'),
+('R003', 'amoxicillin'),
+('R004', 'ibuprofen'),
+('R005', 'azithromycin'),
+('R006', 'ciprofloxacin'),
+('R007', 'metformin'),
+('R008', 'omeprazole'),
+('R009', 'atorvastatin'),
+('R010', 'insulin'),
+('R011', 'lisinopril');
+
+CREATE TABLE Patient_drug_allergy (
+    id SERIAL PRIMARY KEY,
+    patient_id VARCHAR(4) NOT NULL,
+    drug_id VARCHAR(4) NOT NULL,
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id),
+    FOREIGN KEY (drug_id) REFERENCES drug(drug_id),
+    UNIQUE (patient_id, drug_id)
+);
+
+INSERT INTO Patient_drug_allergy VALUES
+(1, 'P001', 'R001'),
+(2, 'P002', 'R003'),
+(3, 'P003', 'R004'),
+(4, 'P004', 'R005'),
+(5, 'P005', 'R006');
+

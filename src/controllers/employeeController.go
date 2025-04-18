@@ -56,6 +56,7 @@ func AddEmployee(c echo.Context) error {
 	if employee_id == "" {
 		return c.JSON(http.StatusBadRequest, "Missing employee ID")
 	}
+	
 	first_name := c.QueryParam("first_name")
 	last_name := c.QueryParam("last_name")
 	position_id := c.QueryParam("position_id")

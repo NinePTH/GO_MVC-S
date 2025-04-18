@@ -53,14 +53,15 @@ func GetEmployee(employeeID string) (*models.Employee, error) {
 	whereCondition := "Employee.employee_id = $1"
 	args := []interface{}{employeeID}
 
-	results, err := SelectInnerJoin(
-		"Employee",
-		joinTables,
-		"", // ✅ joinCondition ต้องเป็นค่าว่าง
-		fields,
-		true,
-		whereCondition,
-		args,
+	results, err := SelectData(
+		"Employee",     // main table
+		fields,         // []string เช่น []{"Employee.name", "Department.name", "Position.title"}
+		true,           // where
+		whereCondition, // เช่น "Employee.salary > ?"
+		args,           // []interface{}{50000}
+		true,           // join
+		joinTables,     // joinTable ที่รวม INNER JOIN ไว้
+		"",             // joinCondition เว้นว่างเพราะรวมไว้แล้ว
 	)
 
 	if err != nil {
@@ -108,7 +109,7 @@ func GetEmployee(employeeID string) (*models.Employee, error) {
 }
 
 func GetAllEmployee() ([]models.Employee, error) {
-	selectedColumn := []string{
+	selectedColumns := []string{
 		"Employee.employee_id",
 		"Employee.first_name",
 		"Employee.last_name",
@@ -121,15 +122,17 @@ func GetAllEmployee() ([]models.Employee, error) {
 		"Employee.resignation_date",
 		"Employee.work_status",
 	}
+	joinTables := "Department ON Employee.department_id = Department.department_id INNER JOIN Position ON Employee.position_id = Position.position_id"
 
-	results, err := SelectInnerJoin(
-		"Employee",
-		"Department ON Employee.department_id = Department.department_id INNER JOIN Position ON Employee.position_id = Position.position_id",
-		"",
-		selectedColumn,
-		false,
-		"",
-		nil,
+	results, err := SelectData(
+		"Employee",      // main table
+		selectedColumns, // columns to select
+		false,           // ไม่มี WHERE
+		"",              // เงื่อนไข WHERE ว่าง
+		nil,             // ไม่มี args
+		true,            // ใช้ JOIN
+		joinTables,      // joinTables ที่รวม INNER JOIN ไว้แล้ว
+		"",              // joinCondition เว้นว่าง
 	)
 
 	if err != nil {

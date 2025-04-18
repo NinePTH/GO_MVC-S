@@ -5,7 +5,8 @@ import (
 
 	"github.com/NinePTH/GO_MVC-S/src/models"
 )
-func UpdatePatient(id string,data map[string]interface{}) (int64, error){
+
+func UpdatePatient(id string, data map[string]interface{}) (int64, error) {
 	table := "Patient"
 	condition := "patient_id = $1"
 	conditionValues := []interface{}{id}
@@ -32,7 +33,7 @@ func GetPatient(id string) (*models.Patient, error) {
 	table := "Patient"
 	fields := []string{"*"}
 
-	result, err := SelectData(table, fields, true, "patient_id = $1", []interface{}{id})
+	result, err := SelectData(table, fields, true, "patient_id = $1", []interface{}{id}, false, "", "")
 
 	if err != nil {
 		return nil, err
@@ -75,7 +76,7 @@ func GetPatient(id string) (*models.Patient, error) {
 
 func GetAllPatients() ([]models.Patient, error) {
 	fields := []string{"*"}
-	results, err := SelectData("Patient", fields, false, "", nil)
+	results, err := SelectData("Patient", fields, false, "", nil, false, "", "")
 	if err != nil {
 		return nil, err
 	}
