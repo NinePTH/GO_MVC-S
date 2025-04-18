@@ -25,7 +25,7 @@ func RegisterUser(username string, password string, role string, id string) (int
 		return 0, errors.New("Invalid role")
 	}
 
-	result, err := SelectData(table, fields, true, whereCondition, []interface{}{id})
+	result, err := SelectData(table, fields, true, whereCondition, []interface{}{id},false,"","")
 
 	if err != nil {
 		return 0, err
@@ -61,7 +61,7 @@ func RegisterUser(username string, password string, role string, id string) (int
 	whereCondition = "username =$1"
 	whereArgs := []interface{}{username}
 
-	result, err = SelectData("users", fields, true, whereCondition, whereArgs)
+	result, err = SelectData("users", fields, true, whereCondition, whereArgs,false,"","")
 	if err != nil {
 		return 0, err
 	}
@@ -102,7 +102,7 @@ func AuthenticateUser(username string, password string) (*auth.Token, error) {
 	whereCondition := "username =$1"
 	whereArgs := []interface{}{username}
 
-	userQueryResult, err := SelectData("users", fields, true, whereCondition, whereArgs)
+	userQueryResult, err := SelectData("users", fields, true, whereCondition, whereArgs,false,"","")
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func AuthenticateUser(username string, password string) (*auth.Token, error) {
 		fields := []string{"patient_id"}
 		whereCondition = "user_id = $1"
 		whereArgs = []interface{}{userId}
-		patientQueryResult, err := SelectData("Patient", fields, true, whereCondition, whereArgs)
+		patientQueryResult, err := SelectData("Patient", fields, true, whereCondition, whereArgs,false,"","")
 		if err != nil {
 			return nil, err
 		}

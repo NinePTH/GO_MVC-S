@@ -11,7 +11,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	table := "Patient"
 	fields := []string{"*"}
 
-	result, err := SelectData(table, fields, true, "patient_id = $1", []interface{}{id})
+	result, err := SelectData(table, fields, true, "patient_id = $1", []interface{}{id},false,"","")
 
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	table = "Medical_history"
 	fields = []string{"*"}
 
-	result, err = SelectData(table, fields, true, "patient_id = $1", []interface{}{id})
+	result, err = SelectData(table, fields, true, "patient_id = $1", []interface{}{id},false,"","")
 
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 
 func GetAllPatients() ([]patients.GeneralPatientInformation, error) {
 	fields := []string{"*"}
-	results, err := SelectData("Patient", fields, false, "", nil)
+	results, err := SelectData("Patient", fields, false, "", nil,false,"","")
 	if err != nil {
 		return nil, err
 	}
