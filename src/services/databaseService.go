@@ -7,7 +7,7 @@ import (
 	"github.com/NinePTH/GO_MVC-S/src/utils/databaseConnector"
 )
 
-// select distinct,inner join ,etc.
+// select distinct,inner join ,etcs
 
 func SelectData(table string, fields []string, where bool, whereCon string, whereArgs []interface{}) ([]map[string]interface{}, error) {
 	var query string = "SELECT "
