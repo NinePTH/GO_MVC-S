@@ -49,30 +49,42 @@ func SelectData(table string, fields []string, where bool, whereCon string, wher
 	}
 
 	var results []map[string]interface{}
-
+	
+	// Hard part again krub pom
+	// Iterate over the rows
 	for rows.Next() {
+		// Create a values for store value that we want and valuePointers for using with scan method
 		values := make([]interface{}, len(columns))
 		valuePointers := make([]interface{}, len(columns))
+
+		// Assign value address to value pointer
 		for i := range values {
 			valuePointers[i] = &values[i]
 		}
 
-		if err := rows.Scan(valuePointers...); err != nil {
+		// Scan the row value into the value pointers to assign the value into values variable
+		err := rows.Scan(valuePointers...)
+		if err != nil {
 			return nil, err
 		}
 
+		// Map the column names to the values
 		rowMap := make(map[string]interface{})
 		for i, column := range columns {
+			// Add each column and its corresponding value to the map
 			rowMap[column] = values[i]
 		}
-		results = append(results, rowMap)
-	}
 
+		// Append the row map to the results slice
+		results = append(results, rowMap)
+		// fmt.Println("rowMap =",rowMap)
+	}
+	fmt.Printf("results = %v\n\n", results)
+
+	// Check if there were any errors during iteration
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("results = %v\n\n", results)
 	return results, nil
 }
 

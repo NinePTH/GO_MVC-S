@@ -161,9 +161,9 @@ func GetPatient(c echo.Context) error {
 }
 
 func GetAllPatients(c echo.Context) error {
-	employee, err := services.GetAllPatients()
+	patient, err := services.GetAllPatients()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, employee)
+	return c.JSON(http.StatusOK, patient)
 }
