@@ -12,6 +12,6 @@ func PatientRoutes(e *echo.Echo) {
 	protected.Use(middlewares.JWTMiddleware())    // Apply JWT middleware (protected route)
 	protected.GET("", controllers.GetAllPatients) // Display all patient info
 	protected.GET("/:id", controllers.GetPatient) // Select patient info by patient_id
-	protected.POST("", controllers.AddPatient)    // Add patient info
 	protected.PUT("", controllers.UpdatePatient)  // Update Patient info
+	protected.POST("/add-patient", controllers.AddPatient) // Protected route
 }

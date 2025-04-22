@@ -1,8 +1,12 @@
 package controllers
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"net/http"
 
+	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 	"github.com/NinePTH/GO_MVC-S/src/services"
 
 	"github.com/labstack/echo/v4"
@@ -62,92 +66,6 @@ func UpdatePatient(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Patient information updated successfully")
 }
 
-func AddPatient(c echo.Context) error {
-	patient_id := c.QueryParam("patient_id")
-	first_name := c.QueryParam("first_name")
-	last_name := c.QueryParam("last_name")
-	age := c.QueryParam("age")
-	date_of_birth := c.QueryParam("date_of_birth")
-	gender := c.QueryParam("gender")
-	blood_type := c.QueryParam("blood_type")
-	email := c.QueryParam("email")
-	health_insurance := c.QueryParam("health_insurance")
-	address := c.QueryParam("address")
-	phone_number := c.QueryParam("phone_number")
-	id_card_number := c.QueryParam("id_card_number")
-	ongoing_treatment := c.QueryParam("ongoing_treatment")
-
-	//ดัก null ทุกช่อง เพราะเพิ่มประวัติคนไข้ต้องกรอกข้อมูลให้ครบ
-	if first_name == "" {
-		return c.JSON(http.StatusBadRequest, "Missing First Name")
-	}
-	if last_name == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Last Name")
-	}
-	if age == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Age")
-	}
-	if date_of_birth == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Date Of Birth")
-	}
-	if gender == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Gender")
-	}
-	if blood_type == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Blood Type")
-	}
-	if email == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Email")
-	}
-	if health_insurance == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Health Insurance")
-	}
-	if address == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Address")
-	}
-	if phone_number == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Phone Number")
-	}
-	if id_card_number == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Id Card Number")
-	}
-	if ongoing_treatment == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Ongoing Treatment")
-	}
-
-	// แปลง health_insurance จาก string -> bool
-	insuranceBool := false
-	if health_insurance == "true" {
-		insuranceBool = true
-	}
-
-	data := map[string]interface{}{
-		"patient_id":        patient_id,
-		"first_name":        first_name,
-		"last_name":         last_name,
-		"age":               age,
-		"date_of_birth":     date_of_birth,
-		"gender":            gender,
-		"blood_type":        blood_type,
-		"email":             email,
-		"health_insurance":  insuranceBool,
-		"address":           address,
-		"phone_number":      phone_number,
-		"id_card_number":    id_card_number,
-		"ongoing_treatment": ongoing_treatment,
-	}
-
-	rowsAffected, err := services.AddPatient(data)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-	}
-
-	if rowsAffected == 0 {
-		return c.JSON(http.StatusOK, map[string]string{"message": "No rows affected"})
-	}
-
-	return c.JSON(http.StatusOK, map[string]string{"message": "Patient added successfully"})
-}
 func GetPatient(c echo.Context) error {
 	id := c.Param("id")
 	user, err := services.GetPatient(id)
@@ -166,4 +84,47 @@ func GetAllPatients(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, patient)
+}
+
+func AddPatient(c echo.Context) error {
+    if c.Request().Header.Get("Content-Type") != "application/json" {
+        return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+    }
+
+     // Log raw request body
+     body, _ := io.ReadAll(c.Request().Body)
+     fmt.Println("Raw Request Body:", string(body))
+     c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body for Bind()
+
+    var req patients.AddPatient
+    if err:= c.Bind(&req); err != nil || req.Patient_id == "" || req.First_name == "" || req.Last_name == "" || req.Age == 0 || req.Gender == "" || req.Date_of_birth == "" || req.Blood_type == "" || req.Email == "" || req.Address == "" || req.Phone_number == "" || req.Id_card_number == "" || req.Ongoing_treatment == "" {
+        return c.JSON(http.StatusBadRequest, "Invalid request, all information must be provided")
+    }
+
+	patientMap := map[string]interface{}{
+		"patient_id": req.Patient_id,
+		"first_name": req.First_name,
+		"last_name": req.Last_name,
+		"age": req.Age,
+		"gender": req.Gender,
+		"date_of_birth": req.Date_of_birth,
+		"blood_type": req.Blood_type,
+		"email": req.Email,
+		"health_insurance": req.Health_insurance,
+		"address": req.Address,
+		"phone_number": req.Phone_number,
+		"id_card_number": req.Id_card_number,
+		"ongoing_treatment": req.Ongoing_treatment,
+	}
+
+    rowsAffected, err := services.AddPatient(patientMap)
+    if err != nil {
+        return c.JSON(http.StatusUnauthorized, err.Error())
+    }
+
+	if rowsAffected == 0 {
+		return c.JSON(http.StatusOK, "No rows affected")
+	}
+
+    return c.JSON(http.StatusOK, "Patient added successfully")
 }
