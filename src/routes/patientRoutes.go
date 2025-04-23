@@ -9,9 +9,9 @@ import (
 
 func PatientRoutes(e *echo.Echo) {
 	protected := e.Group("/patient")
-	protected.Use(middlewares.JWTMiddleware()) // Apply JWT middleware
-
-	protected.GET("", controllers.GetAllPatients) // Protected route
-	protected.GET("/:id", controllers.GetPatient) // Protected route
+	protected.Use(middlewares.JWTMiddleware())    // Apply JWT middleware (protected route)
+	protected.GET("", controllers.GetAllPatients) // Display all patient info
+	protected.GET("/:id", controllers.GetPatient) // Select patient info by patient_id
+	protected.PUT("", controllers.UpdatePatient)  // Update Patient info
 	protected.POST("/add-patient", controllers.AddPatient) // Protected route
 }

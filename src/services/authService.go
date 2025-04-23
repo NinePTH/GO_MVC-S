@@ -25,7 +25,7 @@ func RegisterUser(username string, password string, role string, id string) (int
 		return 0, errors.New("Invalid role")
 	}
 
-	result, err := SelectData(table, fields, true, whereCondition, []interface{}{id})
+	result, err := SelectData(table, fields, true, whereCondition, []interface{}{id}, false, "", "")
 
 	if err != nil {
 		return 0, err
@@ -43,7 +43,7 @@ func RegisterUser(username string, password string, role string, id string) (int
 	data := map[string]interface{}{
 		"username": username,
 		"password": string(hashedPassword),
-		"role": role,
+		"role":     role,
 	}
 
 	insertResult, err := InsertData("users", data)
@@ -61,12 +61,12 @@ func RegisterUser(username string, password string, role string, id string) (int
 	whereCondition = "username =$1"
 	whereArgs := []interface{}{username}
 
-	result, err = SelectData("users", fields, true, whereCondition, whereArgs)
+	result, err = SelectData("users", fields, true, whereCondition, whereArgs, false, "", "")
 	if err != nil {
 		return 0, err
 	}
 
-	if len(result) == 0{
+	if len(result) == 0 {
 		return 0, errors.New("User not found")
 	}
 
@@ -102,12 +102,12 @@ func AuthenticateUser(username string, password string) (*auth.Token, error) {
 	whereCondition := "username =$1"
 	whereArgs := []interface{}{username}
 
-	userQueryResult, err := SelectData("users", fields, true, whereCondition, whereArgs)
+	userQueryResult, err := SelectData("users", fields, true, whereCondition, whereArgs, false, "", "")
 	if err != nil {
 		return nil, err
 	}
 
-	if len(userQueryResult) == 0{
+	if len(userQueryResult) == 0 {
 		return nil, errors.New("User not found")
 	}
 
@@ -120,11 +120,11 @@ func AuthenticateUser(username string, password string) (*auth.Token, error) {
 		return nil, errors.New("Invalid password")
 	}
 
-	if (role == "patient") {
+	if role == "patient" {
 		fields := []string{"patient_id"}
 		whereCondition = "user_id = $1"
 		whereArgs = []interface{}{userId}
-		patientQueryResult, err := SelectData("Patient", fields, true, whereCondition, whereArgs)
+		patientQueryResult, err := SelectData("Patient", fields, true, whereCondition, whereArgs, false, "", "")
 		if err != nil {
 			return nil, err
 		}
@@ -132,8 +132,8 @@ func AuthenticateUser(username string, password string) (*auth.Token, error) {
 		patientId := patientQueryResult[0]["patient_id"].(string)
 
 		generateJWTParam := auth.GenerateJWTClaimsParams{
-			Username: username,
-			Role:     role,
+			Username:  username,
+			Role:      role,
 			PatientID: patientId,
 		}
 		token, err := middlewares.GenerateJWT(generateJWTParam)

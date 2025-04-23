@@ -7,11 +7,34 @@ import (
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 )
 
+func UpdatePatient(id string, data map[string]interface{}) (int64, error) {
+	table := "Patient"
+	condition := "patient_id = $1"
+	conditionValues := []interface{}{id}
+
+	// Call UpdateData with correct parameters
+	rowsAffected, err := UpdateData(table, data, condition, conditionValues)
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}
+
+func AddPatient(data map[string]interface{}) (int64, error) {
+	table := "Patient"
+	rowsAffected, err := InsertData(table, data)
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}
 func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	table := "Patient"
 	fields := []string{"*"}
 
-	result, err := SelectData(table, fields, true, "patient_id = $1", []interface{}{id})
+	result, err := SelectData(table, fields, true, "patient_id = $1", []interface{}{id}, false, "", "")
 
 	if err != nil {
 		return nil, err
@@ -54,7 +77,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	table = "Medical_history"
 	fields = []string{"*"}
 
-	result, err = SelectData(table, fields, true, "patient_id = $1", []interface{}{id})
+	result, err = SelectData(table, fields, true, "patient_id = $1", []interface{}{id},false,"","")
 
 	if err != nil {
 		return nil, err
@@ -83,7 +106,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 
 func GetAllPatients() ([]patients.GeneralPatientInformation, error) {
 	fields := []string{"*"}
-	results, err := SelectData("Patient", fields, false, "", nil)
+	results, err := SelectData("Patient", fields, false, "", nil, false, "", "")
 	if err != nil {
 		return nil, err
 	}
@@ -121,14 +144,4 @@ func GetAllPatients() ([]patients.GeneralPatientInformation, error) {
 	}
 	fmt.Println(patientList)
 	return patientList, nil
-}
-
-func AddPatient(patientInformation map[string]interface{}) (int64, error) {
-	table := "Patient"
-	rowsAffected, err := InsertData(table, patientInformation)
-	if err != nil {
-		return 0, err
-	}
-
-	return rowsAffected, nil
 }

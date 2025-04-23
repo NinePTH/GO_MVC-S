@@ -3,29 +3,40 @@ package services
 import (
 	"fmt"
 	"strings"
-
 	"github.com/NinePTH/GO_MVC-S/src/utils/databaseConnector"
 )
 
-// select distinct,inner join ,etc.
-
-func SelectData(table string, fields []string, where bool, whereCon string, whereArgs []interface{}) ([]map[string]interface{}, error) {
+// select distinct,etc.
+func SelectData(table string, fields []string, where bool, whereCon string, whereArgs []interface{}, join bool, joinTable string, joinCondition string) ([]map[string]interface{}, error) {
 	var query string = "SELECT "
 
+	// Add fields to SELECT
 	for _, field := range fields {
 		query += field + ", "
 	}
-
 	query = strings.TrimRight(query, ", ")
 
+	// Add FROM clause
 	query += " FROM " + table
 
+	// If join is enabled
+	if join {
+		if joinCondition != "" {
+			query += " INNER JOIN " + joinTable + " ON " + joinCondition
+		} else {
+			query += " INNER JOIN " + joinTable
+		}
+	}
+
+	// If WHERE condition exists
 	if where {
 		query += " WHERE " + whereCon
 	}
 
+	// Log the query
 	fmt.Println("Executing query:", query)
 
+	// Execute the query
 	rows, err := databaseConnector.DB.Query(query, whereArgs...)
 	if err != nil {
 		return nil, err
@@ -38,7 +49,7 @@ func SelectData(table string, fields []string, where bool, whereCon string, wher
 	}
 
 	var results []map[string]interface{}
-
+	
 	// Hard part again krub pom
 	// Iterate over the rows
 	for rows.Next() {
@@ -76,6 +87,7 @@ func SelectData(table string, fields []string, where bool, whereCon string, wher
 	}
 	return results, nil
 }
+
 func UpdateData(table string, data map[string]interface{}, condition string, conditionValues []interface{}) (int64, error) {
 	var setClauses []string
 	var values []interface{}
