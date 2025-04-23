@@ -72,6 +72,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 		Phone_number:      phone_number,
 		Id_card_number:    id_card_number,
 		Ongoing_treatment: ongoing_treatment,
+		
 	}
 
 	table = "Medical_history"

@@ -61,6 +61,7 @@ VALUES
 
  INSERT INTO Medical_history (patient_id, detail, time, date)
 VALUES ('P001', 'Fever and headache and maybe kys', '10:30:00', '2025-04-08');
+VALUES ('P002', 'Fever and stomachache', '10:30:00', '2025-04-08');
 
 
 CREATE TABLE Department(
