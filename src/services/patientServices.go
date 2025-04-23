@@ -57,6 +57,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	phone_number := result[0]["phone_number"].(string)
 	id_card_number := result[0]["id_card_number"].(string)
 	ongoing_treatment := result[0]["ongoing_treatment"].(string)
+	unhealthy_habits := result[0]["unhealthy_habits"].(string)
 
 	var patient = patients.GeneralPatientInformation{
 		Patient_id:        patient_id,
@@ -72,12 +73,13 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 		Phone_number:      phone_number,
 		Id_card_number:    id_card_number,
 		Ongoing_treatment: ongoing_treatment,
+		Unhealthy_habits:  unhealthy_habits,
 	}
 
 	table = "Medical_history"
 	fields = []string{"*"}
 
-	result, err = SelectData(table, fields, true, "patient_id = $1", []interface{}{id},false,"","")
+	result, err = SelectData(table, fields, true, "patient_id = $1", []interface{}{id}, false, "", "")
 
 	if err != nil {
 		return nil, err
@@ -97,51 +99,60 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	}
 
 	var response = patients.GetPatientResponse{
-		PatientGeneralInfo: patient,
+		PatientGeneralInfo:    patient,
 		PatientMedicalHistory: medical_history,
 	}
 
 	return &response, nil
 }
 
-func GetAllPatients() ([]patients.GeneralPatientInformation, error) {
+func GetAllPatients() ([]patients.GetPatientResponse, error) {
 	fields := []string{"*"}
 	results, err := SelectData("Patient", fields, false, "", nil, false, "", "")
 	if err != nil {
 		return nil, err
 	}
-	var patientList []patients.GeneralPatientInformation
+	var patientResponses []patients.GetPatientResponse
 	for _, row := range results {
 		patient_id := row["patient_id"].(string)
-		first_name := row["first_name"].(string)
-		last_name := row["last_name"].(string)
-		age := int(row["age"].(int64))
-		gender := string(row["gender"].([]uint8))
-		blood_type := string(row["blood_type"].([]uint8))
-		email := row["email"].(string)
-		health_insurance := row["health_insurance"].(bool)
-		address := row["address"].(string)
-		phone_number := row["phone_number"].(string)
-		id_card_number := row["id_card_number"].(string)
-		ongoing_treatment := row["ongoing_treatment"].(string)
-
 		patient := patients.GeneralPatientInformation{
 			Patient_id:        patient_id,
-			First_name:        first_name,
-			Last_name:         last_name,
-			Age:               age,
-			Gender:            gender,
-			Blood_type:        blood_type,
-			Email:             email,
-			Health_insurance:  health_insurance,
-			Address:           address,
-			Phone_number:      phone_number,
-			Id_card_number:    id_card_number,
-			Ongoing_treatment: ongoing_treatment,
+			First_name:        row["first_name"].(string),
+			Last_name:         row["last_name"].(string),
+			Age:               int(row["age"].(int64)),
+			Gender:            string(row["gender"].([]uint8)),
+			Blood_type:        string(row["blood_type"].([]uint8)),
+			Email:             row["email"].(string),
+			Health_insurance:  row["health_insurance"].(bool),
+			Address:           row["address"].(string),
+			Phone_number:      row["phone_number"].(string),
+			Id_card_number:    row["id_card_number"].(string),
+			Ongoing_treatment: row["ongoing_treatment"].(string),
+			Unhealthy_habits:  row["unhealthy_habits"].(string),
 		}
-		patientList = append(patientList, patient)
-		fmt.Println(patient)
+		table := "Medical_history"
+		fields = []string{"*"}
+		historyResults, err := SelectData(table, fields, true, "patient_id = $1", []interface{}{patient_id}, false, "", "")
+		if err != nil {
+			return nil, err
+		}
+		var medical_history []patients.MedicalHistory
+		for _, row := range historyResults {
+			details := row["detail"].(string)
+			date := string(row["date"].(time.Time).Format("02-01-2006"))
+			time := string(row["time"].(time.Time).Format("02:01:00"))
+
+			medical_history = append(medical_history, patients.MedicalHistory{
+				Details: details,
+				Date:    date,
+				Time:    time,
+			})
+		}
+		var response = patients.GetPatientResponse{
+			PatientGeneralInfo:    patient,
+			PatientMedicalHistory: medical_history,
+		}
+		patientResponses = append(patientResponses, response)
 	}
-	fmt.Println(patientList)
-	return patientList, nil
+	return patientResponses, nil
 }

@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 	"github.com/NinePTH/GO_MVC-S/src/services"
-
 	"github.com/labstack/echo/v4"
 )
 
@@ -38,6 +36,7 @@ func UpdatePatient(c echo.Context) error {
 	addIfNotEmpty("phone_number", c.QueryParam("phone_number"))
 	addIfNotEmpty("id_card_number", c.QueryParam("id_card_number"))
 	addIfNotEmpty("ongoing_treatment", c.QueryParam("ongoing_treatment"))
+
 
 	// จัดการ health_insurance แยก เพราะเป็น bool
 	health_insurance := c.QueryParam("health_insurance")
@@ -128,3 +127,71 @@ func AddPatient(c echo.Context) error {
 
     return c.JSON(http.StatusOK, "Patient added successfully")
 }
+
+// func AddPatient(c echo.Context) error {
+// 	if c.Request().Header.Get("Content-Type") != "application/json" {
+// 		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+// 	}
+
+// 	body, _ := io.ReadAll(c.Request().Body)
+// 	fmt.Println("Raw Request Body:", string(body))
+// 	c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body
+
+// 	var req patients.AddPatientRequest
+// 	if err := c.Bind(&req); err != nil {
+// 		return c.JSON(http.StatusBadRequest, "Invalid request body")
+// 	}
+
+// 	// ตรวจสอบความครบถ้วนของข้อมูล patient
+// 	p := req.Patient
+// 	if p.Patient_id == "" || p.First_name == "" || p.Last_name == "" || p.Age == 0 ||
+// 		p.Gender == "" || p.Date_of_birth == "" || p.Blood_type == "" || p.Email == "" ||
+// 		p.Address == "" || p.Phone_number == "" || p.Id_card_number == "" || p.Ongoing_treatment == "" {
+// 		return c.JSON(http.StatusBadRequest, "All patient fields must be provided")
+// 	}
+
+// 	// สร้าง map สำหรับ Insert
+// 	patientMap := map[string]interface{}{
+// 		"patient_id":        p.Patient_id,
+// 		"first_name":        p.First_name,
+// 		"last_name":         p.Last_name,
+// 		"age":               p.Age,
+// 		"gender":            p.Gender,
+// 		"date_of_birth":     p.Date_of_birth,
+// 		"blood_type":        p.Blood_type,
+// 		"email":             p.Email,
+// 		"health_insurance":  p.Health_insurance,
+// 		"address":           p.Address,
+// 		"phone_number":      p.Phone_number,
+// 		"id_card_number":    p.Id_card_number,
+// 		"ongoing_treatment": p.Ongoing_treatment,
+// 	}
+
+// 	// ➤ ส่งข้อมูลไปยัง services.AddPatient
+// 	rowsAffected, err := services.AddPatient(patientMap,"patient") //table name
+// 	if err != nil {
+// 		return c.JSON(http.StatusUnauthorized, err.Error())
+// 	}
+
+// 	// ➤ เพิ่ม chronic disease ให้ผู้ป่วย
+// 	for _, cd := range req.PatientChronicDisease {
+// 		_, err := services.AddPatient(p.Patient_id, cd.DiseaseID)
+// 		if err != nil {
+// 			fmt.Println("Error adding chronic disease:", err)
+// 		}
+// 	}
+
+// 	// ➤ เพิ่ม drug allergy ให้ผู้ป่วย
+// 	for _, da := range req.PatientDrugAllergy {
+// 		_, err := services.AddPatient(p.Patient_id, da.DrugID)
+// 		if err != nil {
+// 			fmt.Println("Error adding drug allergy:", err)
+// 		}
+// 	}
+
+// 	if rowsAffected == 0 {
+// 		return c.JSON(http.StatusOK, "No rows affected")
+// 	}
+
+// 	return c.JSON(http.StatusOK, "Patient added successfully")
+// }
