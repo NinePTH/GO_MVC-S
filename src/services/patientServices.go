@@ -57,6 +57,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	phone_number := result[0]["phone_number"].(string)
 	id_card_number := result[0]["id_card_number"].(string)
 	ongoing_treatment := result[0]["ongoing_treatment"].(string)
+	unhealthy_habits := result[0]["unhealthy_habits"].(string)
 
 	var patient = patients.GeneralPatientInformation{
 		Patient_id:        patient_id,
@@ -72,6 +73,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 		Phone_number:      phone_number,
 		Id_card_number:    id_card_number,
 		Ongoing_treatment: ongoing_treatment,
+		Unhealthy_habits: unhealthy_habits,
 		
 	}
 
@@ -125,6 +127,7 @@ func GetAllPatients() ([]patients.GeneralPatientInformation, error) {
 		phone_number := row["phone_number"].(string)
 		id_card_number := row["id_card_number"].(string)
 		ongoing_treatment := row["ongoing_treatment"].(string)
+		unhealthy_habits := row["unhealthy_habits"].(string)
 
 		patient := patients.GeneralPatientInformation{
 			Patient_id:        patient_id,
@@ -139,6 +142,7 @@ func GetAllPatients() ([]patients.GeneralPatientInformation, error) {
 			Phone_number:      phone_number,
 			Id_card_number:    id_card_number,
 			Ongoing_treatment: ongoing_treatment,
+			Unhealthy_habits: unhealthy_habits,
 		}
 		patientList = append(patientList, patient)
 		fmt.Println(patient)
