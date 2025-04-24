@@ -4,9 +4,18 @@ import (
 	"fmt"
 	//"strings"
 	"time"
-
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 )
+func DeleteByPatientID(table string, patientID string) error {
+	condition := "patient_id = $1"
+	conditionValues := []interface{}{patientID}
+	rowsAffected, err := DeleteData(table, condition, conditionValues)
+	if err != nil {
+		return fmt.Errorf("failed to delete from %s: %w", table, err)
+	}
+	fmt.Printf("Deleted %d rows from %s where patient_id = %s\n", rowsAffected, table, patientID)
+	return nil
+}
 
 func UpdatePatient(id string, data map[string]interface{}) (int64, error) {
 	table := "Patient"
@@ -18,7 +27,6 @@ func UpdatePatient(id string, data map[string]interface{}) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-
 	return rowsAffected, nil
 }
 
@@ -82,7 +90,6 @@ func AddPatient(req patients.AddPatientRequest) error {
 	}
 	return nil
 }
-
 
 func GetPatient(id string) ([]patients.GetPatientResponse, error) {
 	table := "Patient"

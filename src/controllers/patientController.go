@@ -5,65 +5,109 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 	"github.com/NinePTH/GO_MVC-S/src/services"
-
 	"github.com/labstack/echo/v4"
 )
-
 func UpdatePatient(c echo.Context) error {
-	patient_id := c.QueryParam("patient_id")
+	if c.Request().Header.Get("Content-Type") != "application/json" {
+		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+	}
+	// Log raw request body
+	body, _ := io.ReadAll(c.Request().Body)
+	fmt.Println("Raw Request Body:", string(body))
+	c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body for Bind()
+
+	var req patients.AddPatientRequest
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request body")
+	}
+
+	patient_id := req.Patient.Patient_id // ใช้ patient_id จาก body ที่ส่งมา
 	if patient_id == "" {
-		return c.JSON(http.StatusBadRequest, "Missing user ID")
+		return c.JSON(http.StatusBadRequest, "Missing patient_id")
 	}
 
 	data := map[string]interface{}{}
-
-	// ใช้ helper function เพื่อเช็คและเพิ่มค่าเข้า map เฉพาะที่ไม่ว่าง (ทำให้สามารถ update แค่บางค่าได้.)
 	addIfNotEmpty := func(key, value string) {
 		if value != "" {
 			data[key] = value
 		}
 	}
 
-	addIfNotEmpty("first_name", c.QueryParam("first_name"))
-	addIfNotEmpty("last_name", c.QueryParam("last_name"))
-	addIfNotEmpty("age", c.QueryParam("age"))
-	addIfNotEmpty("date_of_birth", c.QueryParam("date_of_birth"))
-	addIfNotEmpty("gender", c.QueryParam("gender"))
-	addIfNotEmpty("blood_type", c.QueryParam("blood_type"))
-	addIfNotEmpty("email", c.QueryParam("email"))
-	addIfNotEmpty("address", c.QueryParam("address"))
-	addIfNotEmpty("phone_number", c.QueryParam("phone_number"))
-	addIfNotEmpty("id_card_number", c.QueryParam("id_card_number"))
-	addIfNotEmpty("ongoing_treatment", c.QueryParam("ongoing_treatment"))
+	// เพิ่มข้อมูลที่ไม่ว่างใน data
+	addIfNotEmpty("first_name", req.Patient.First_name)
+	addIfNotEmpty("last_name", req.Patient.Last_name)
+	addIfNotEmpty("age", fmt.Sprintf("%v", req.Patient.Age)) // แปลง age เป็น string (รับเป็น null)
+	addIfNotEmpty("date_of_birth", req.Patient.Date_of_birth)
+	addIfNotEmpty("gender", req.Patient.Gender)
+	addIfNotEmpty("blood_type", req.Patient.Blood_type)
+	addIfNotEmpty("email", req.Patient.Email)
+	addIfNotEmpty("address", req.Patient.Address)
+	addIfNotEmpty("phone_number", req.Patient.Phone_number)
+	addIfNotEmpty("id_card_number", req.Patient.Id_card_number)
+	addIfNotEmpty("ongoing_treatment", req.Patient.Ongoing_treatment)
+	addIfNotEmpty("unhealthy_habits", req.Patient.Unhealthy_habits)
 
-	// จัดการ health_insurance แยก เพราะเป็น bool
-	health_insurance := c.QueryParam("health_insurance")
-	if health_insurance != "" {
-		if health_insurance == "true" {
-			data["health_insurance"] = true
-		} else {
-			data["health_insurance"] = false
+	// Handle health_insurance (boolean)
+	data["health_insurance"] = req.Patient.Health_insurance
+	
+
+	// Update patient info
+	if len(data) > 0 {
+		rowsAffected, err := services.UpdatePatient(patient_id, data)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+		fmt.Printf("Patient info updated: %d rows affected\n", rowsAffected)
+	}
+
+	// ============ Chronic Diseases ============ (ถ้าส่งเปล่า->ไม่เกิดอะไรขึ้น เก็บค่าเดิม) (ถ้าส่งค่าจะ rewrite ค่าเก่า)
+	// ถ้ามีการใส่ค่าเข้า arrray PatientChronicDisease
+	if len(req.PatientChronicDisease) > 0 {
+		// ลบ ค่าใน table patient_chronic_disease เก่าที่มีอยู่
+		table := "patient_chronic_disease"
+		if err := services.DeleteByPatientID(table, patient_id); err != nil {
+			return c.JSON(http.StatusInternalServerError, "Failed to delete chronic diseases")
+		}
+
+		// เพิ่ม chronic diseases ใหม่
+		for _, chronic := range req.PatientChronicDisease {
+			chronicMap := map[string]interface{}{
+				"patient_id": patient_id,
+				"disease_id": chronic.DiseaseID,
+			}
+			_, err := services.InsertData("patient_chronic_disease", chronicMap)
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, fmt.Sprintf("Insert chronic disease failed: %v", err))
+			}
 		}
 	}
 
-	// ถ้าไม่มี field อะไรเลยใน data ให้คืนว่าไม่มีอะไรอัปเดต
-	if len(data) == 0 {
-		return c.JSON(http.StatusBadRequest, "No data to update")
+	// ============ Drug Allergies ============ (ถ้าส่งเปล่า->ไม่เกิดอะไรขึ้น เก็บค่าเดิม) (ถ้าส่งค่าจะ rewrite ค่าเก่า)
+	// ถ้ามีการใส่ค่าเข้า arrray PatientChronicDisease
+	if len(req.PatientDrugAllergy) > 0 {
+		// ลบ ค่าใน table patient_drug_allergy drug allergies เก่าที่มีอยู่
+		table := "patient_drug_allergy"
+		if err := services.DeleteByPatientID(table, patient_id); err != nil {
+			return c.JSON(http.StatusInternalServerError, "Failed to delete drug allergies")
+		}
+
+		// เพิ่ม drug allergies ใหม่
+		for _, allergy := range req.PatientDrugAllergy {
+			allergyMap := map[string]interface{}{
+				"patient_id": patient_id,
+				"drug_id":    allergy.DrugID,
+			}
+			_, err := services.InsertData("patient_drug_allergy", allergyMap)
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, fmt.Sprintf("Insert drug allergy failed: %v", err))
+			}
+		}
 	}
 
-	rowsAffected, err := services.UpdatePatient(patient_id, data)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
-	if rowsAffected == 0 {
-		return c.JSON(http.StatusOK, "No rows affected")
-	}
-
-	return c.JSON(http.StatusOK, "Patient information updated successfully")
+	return c.JSON(http.StatusOK, "Patient updated successfully")
 }
 
 func GetPatient(c echo.Context) error {
