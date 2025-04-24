@@ -30,7 +30,7 @@ func AddPatient(data map[string]interface{}) (int64, error) {
 
 	return rowsAffected, nil
 }
-func GetPatient(id string) (*patients.GetPatientResponse, error) {
+func GetPatient(id string) ([]patients.GetPatientResponse, error) {
 	table := "Patient"
 	fields := []string{"*"}
 
@@ -59,6 +59,8 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	ongoing_treatment := result[0]["ongoing_treatment"].(string)
 	unhealthy_habits := result[0]["unhealthy_habits"].(string)
 
+	var patientResponses []patients.GetPatientResponse
+
 	var patient = patients.GeneralPatientInformation{
 		Patient_id:        patient_id,
 		First_name:        first_name,
@@ -76,20 +78,20 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 		Unhealthy_habits:  unhealthy_habits,
 	}
 
+	// Medical History
 	table = "Medical_history"
 	fields = []string{"*"}
-
-	result, err = SelectData(table, fields, true, "patient_id = $1", []interface{}{id}, false, "", "")
-
+	whereCondition := "patient_id = $1"
+	args := []interface{}{patient_id}
+	medicalResults, err := SelectData(table, fields, true, whereCondition, args, false, "", "")
 	if err != nil {
 		return nil, err
 	}
-
 	var medical_history []patients.MedicalHistory
-	for _, row := range result {
+	for _, row := range medicalResults {
 		details := row["detail"].(string)
-		date := string(row["date"].(time.Time).Format("02-01-2006"))
-		time := string(row["time"].(time.Time).Format("02:01:00"))
+		date := row["date"].(time.Time).Format("02-01-2006")
+		time := row["time"].(time.Time).Format("15:04:05")
 
 		medical_history = append(medical_history, patients.MedicalHistory{
 			Details: details,
@@ -98,13 +100,58 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 		})
 	}
 
-	var response = patients.GetPatientResponse{
-		PatientGeneralInfo:    patient,
-		PatientMedicalHistory: medical_history,
+	// Chronic diseases (With INNER JOIN)
+	table = "patient_chronic_disease"
+	jointables := "disease ON patient_chronic_disease.disease_id = disease.disease_id"
+	fields = []string{"disease_name"}
+	whereCondition = "patient_id = $1"
+	args = []interface{}{patient_id}
+	chronicResults, err := SelectData(table, fields, true, whereCondition, args, true, jointables, "")
+	if err != nil {
+		return nil, err
+	}
+	var chronicDiseases []patients.ChronicDiseaseName
+	for _, row := range chronicResults {
+		chronicDiseases = append(chronicDiseases, patients.ChronicDiseaseName{
+			DiseaseID: row["disease_name"].(string),
+		})
 	}
 
-	return &response, nil
+	// Drug allergies
+	table = "patient_drug_allergy"
+	jointables = "drug ON patient_drug_allergy.drug_id = drug.drug_id"
+	whereCondition = "patient_id = $1"
+	fields = []string{"drug_name"}
+	args = []interface{}{patient_id}
+	allergyResults, err := SelectData(table,
+		fields,
+		true,
+		whereCondition,
+		args,
+		true,
+		jointables,
+		"")
+	if err != nil {
+		return nil, err
+	}
+	var drugAllergies []patients.DrugAllergyName
+	for _, row := range allergyResults {
+		drugAllergies = append(drugAllergies, patients.DrugAllergyName{
+			DrugID: row["drug_name"].(string),
+		})
+	}
+
+	// รวมร่าง json response = patient_model + medical_history + patient_chronicdisease + patientdrug_allerygy
+	response := patients.GetPatientResponse{
+		PatientGeneralInfo:    patient,
+		PatientMedicalHistory: medical_history,
+		PatientChronicDisease: chronicDiseases,
+		PatientDrugAllergy:    drugAllergies,
+	}
+	patientResponses = append(patientResponses, response)
+	return patientResponses, nil
 }
+
 func GetAllPatients() ([]patients.GetPatientResponse, error) {
 	table := "patient"
 	fields := []string{"*"}
