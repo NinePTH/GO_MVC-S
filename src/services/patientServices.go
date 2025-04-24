@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	//"strings"
 	"time"
 
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
@@ -21,15 +22,68 @@ func UpdatePatient(id string, data map[string]interface{}) (int64, error) {
 	return rowsAffected, nil
 }
 
-func AddPatient(data map[string]interface{}) (int64, error) {
-	table := "Patient"
-	rowsAffected, err := InsertData(table, data)
-	if err != nil {
-		return 0, err
+func AddPatient(req patients.AddPatientRequest) error {
+	// log ข้อมูลที่รับเข้ามา
+	fmt.Printf("Received AddPatientRequest: %+v\n", req)
+	p := req.Patient
+	patientMap := map[string]interface{}{
+		"patient_id":        p.Patient_id,
+		"first_name":        p.First_name,
+		"last_name":         p.Last_name,
+		"age":               p.Age,
+		"gender":            p.Gender,
+		"date_of_birth":     p.Date_of_birth,
+		"blood_type":        p.Blood_type,
+		"email":             p.Email,
+		"health_insurance":  p.Health_insurance,
+		"address":           p.Address,
+		"phone_number":      p.Phone_number,
+		"id_card_number":    p.Id_card_number,
+		"ongoing_treatment": p.Ongoing_treatment,
+		"unhealthy_habits":  p.Unhealthy_habits,
 	}
 
-	return rowsAffected, nil
+	fmt.Printf("Inserting patient: %+v\n", patientMap)
+
+	// Insert to patient table
+	table := "patient"
+	_, err := InsertData(table, patientMap)
+	if err != nil {
+		return fmt.Errorf("insert patient failed: %w", err)
+	}
+
+	// Insert to chronic diseases table
+	for _, chronic := range req.PatientChronicDisease {
+		chronicMap := map[string]interface{}{
+			"patient_id": p.Patient_id,
+			"disease_id": chronic.DiseaseID,
+		}
+		
+		fmt.Printf("Chronic disease loop: patient_id = %s, disease_id = %s\n", p.Patient_id, chronic.DiseaseID)
+
+		table = "patient_chronic_disease"
+		_, err := InsertData(table, chronicMap)
+		if err != nil {
+			return fmt.Errorf("insert chronic disease failed: %w", err)
+		}
+	}
+	// Insert to drug allergies table
+	for _, allergy := range req.PatientDrugAllergy {
+		allergyMap := map[string]interface{}{
+			"patient_id": p.Patient_id,
+			"drug_id":    allergy.DrugID,
+		}
+		fmt.Printf("Drug allergy loop: patient_id = %s, drug_id = %s\n", p.Patient_id, allergy.DrugID)
+		table = "patient_drug_allergy"
+		_, err := InsertData(table, allergyMap)
+		if err != nil {
+			return fmt.Errorf("insert drug allergy failed: %w", err)
+		}
+	}
+	return nil
 }
+
+
 func GetPatient(id string) ([]patients.GetPatientResponse, error) {
 	table := "Patient"
 	fields := []string{"*"}
