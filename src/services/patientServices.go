@@ -7,6 +7,11 @@ import (
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 )
 
+
+
+
+
+
 func UpdatePatient(id string, data map[string]interface{}) (int64, error) {
 	table := "Patient"
 	condition := "patient_id = $1"
@@ -20,6 +25,17 @@ func UpdatePatient(id string, data map[string]interface{}) (int64, error) {
 
 	return rowsAffected, nil
 }
+
+func AddPatientHistory(data map[string]interface{}) (int64, error) {
+	table := "Medical_history"
+	rowsAffected, err := InsertData(table, data)
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}
+
 
 func AddPatient(data map[string]interface{}) (int64, error) {
 	table := "Patient"

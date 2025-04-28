@@ -1,3 +1,4 @@
+//limit 
 package controllers
 
 import (
@@ -84,6 +85,40 @@ func GetAllPatients(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, patient)
+}
+
+func AddPatientHistory(c echo.Context) error{
+	if c.Request().Header.Get("Content-Type") != "application/json" {
+        return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+    }
+
+     // Log raw request body
+     body, _ := io.ReadAll(c.Request().Body)
+     fmt.Println("Raw Request Body:", string(body))
+     c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body for Bind()
+
+    var req patients.AddPatientHistory
+    if err:= c.Bind(&req); err != nil || req.Patient_id == "" || req.Detail == "" || req.Time == "" || req.Date == "" {
+        return c.JSON(http.StatusBadRequest, "Invalid request, all information must be provided")
+    }
+
+	patientMap := map[string]interface{}{
+		"patient_id": req.Patient_id,
+		"detail": req.Detail,
+		"time": req.Time,
+		"date": req.Date,
+	}
+
+    rowsAffected, err := services.AddPatientHistory(patientMap)
+    if err != nil {
+        return c.JSON(http.StatusUnauthorized, err.Error())
+    }
+
+	if rowsAffected == 0 {
+		return c.JSON(http.StatusOK, "No rows affected")
+	}
+
+    return c.JSON(http.StatusOK, "Patient history added successfully")
 }
 
 func AddPatient(c echo.Context) error {
