@@ -3,7 +3,9 @@ package services
 import (
 	"fmt"
 	//"strings"
+	//"strings"
 	"time"
+
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 )
 func AddPatientAppointment(req patients.AddPatientAppointment) error {
@@ -202,7 +204,7 @@ func AddPatient(req patients.AddPatientRequest) error {
 	return nil
 }
 
-func GetPatient(id string) ([]patients.GetPatientResponse, error) {
+func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	table := "Patient"
 	fields := []string{"*"}
 
@@ -224,14 +226,12 @@ func GetPatient(id string) ([]patients.GetPatientResponse, error) {
 	date_of_birth := string(result[0]["date_of_birth"].(time.Time).Format("02-01-2006"))
 	blood_type := string(result[0]["blood_type"].([]uint8))
 	email := result[0]["email"].(string)
-	health_insurance := result[0]["health_insurance"].(bool)
+	health_insurance := string(result[0]["health_insurance"].([]uint8))
 	address := result[0]["address"].(string)
 	phone_number := result[0]["phone_number"].(string)
 	id_card_number := result[0]["id_card_number"].(string)
 	ongoing_treatment := result[0]["ongoing_treatment"].(string)
 	unhealthy_habits := result[0]["unhealthy_habits"].(string)
-
-	var patientResponses []patients.GetPatientResponse
 
 	var patient = patients.GeneralPatientInformation{
 		Patient_id:        patient_id,
@@ -321,8 +321,7 @@ func GetPatient(id string) ([]patients.GetPatientResponse, error) {
 		PatientChronicDisease: chronicDiseases,
 		PatientDrugAllergy:    drugAllergies,
 	}
-	patientResponses = append(patientResponses, response)
-	return patientResponses, nil
+	return &response, nil
 }
 
 func GetAllPatients() ([]patients.GetPatientResponse, error) {
@@ -346,7 +345,7 @@ func GetAllPatients() ([]patients.GetPatientResponse, error) {
 			Gender:            string(row["gender"].([]uint8)),
 			Blood_type:        string(row["blood_type"].([]uint8)),
 			Email:             row["email"].(string),
-			Health_insurance:  row["health_insurance"].(bool),
+			Health_insurance:  string(row["health_insurance"].([]uint8)),
 			Address:           row["address"].(string),
 			Phone_number:      row["phone_number"].(string),
 			Id_card_number:    row["id_card_number"].(string),

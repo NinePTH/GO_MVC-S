@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
+	"github.com/NinePTH/GO_MVC-S/src/models"
 	"github.com/NinePTH/GO_MVC-S/src/services"
 
 	"github.com/labstack/echo/v4"
@@ -52,71 +54,71 @@ func UpdateEmployee(c echo.Context) error {
 }
 
 func AddEmployee(c echo.Context) error {
-	employee_id := c.QueryParam("employee_id")
-	if employee_id == "" {
-		return c.JSON(http.StatusBadRequest, "Missing employee ID")
+	// ตรวจสอบ Content-Type
+	if c.Request().Header.Get("Content-Type") != "application/json" {
+		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
 	}
-	
-	first_name := c.QueryParam("first_name")
-	last_name := c.QueryParam("last_name")
-	position_id := c.QueryParam("position_id")
-	phone_number := c.QueryParam("phone_number")
-	department_id := c.QueryParam("department_id")
-	salary := c.QueryParam("salary")
-	email := c.QueryParam("email")
-	hire_date := c.QueryParam("hire_date")
-	resignation_date := c.QueryParam("resignation_date")
-	var resignationDate interface{}
-	if resignation_date == "" {
-		resignationDate = nil
-	} else {
-		resignationDate = resignation_date
-	}
-	work_status := c.QueryParam("work_status")
 
-	//ดัก null ทุกช่อง เพราะเพิ่มประวัติพนักงานต้องกรอกข้อมูลให้ครบ
-	if first_name == "" {
-		return c.JSON(http.StatusBadRequest, "Missing First Name")
+	var req models.Employee
+	// Bind ข้อมูล JSON เข้าสู่ struct
+	if err := c.Bind(&req); err != nil {
+		fmt.Println("Error binding request:", err) // เพิ่ม log เพื่อดูข้อผิดพลาด
+		return c.JSON(http.StatusBadRequest, "Invalid request body")
 	}
-	if last_name == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Last Name")
+
+	// เช็คว่าทุก field ที่จำเป็นต้องมีค่าหมด
+	if req.Employee_id == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Employee ID is required"})
 	}
-	if position_id == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Position Id")
+	if req.First_name == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "First name is required"})
 	}
-	if phone_number == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Phone Number")
+	if req.Last_name == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Last name is required"})
 	}
-	if department_id == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Department id")
+	if req.Position_name == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Position name is required"})
 	}
-	if salary == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Salary")
+	if req.Phone_number == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Phone number is required"})
 	}
-	if email == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Email")
+	if req.Department_name == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Department name is required"})
 	}
-	if hire_date == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Hire Date")
+	if req.Email == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email is required"})
 	}
-	//ไม่เช็ค resignation date
-	if work_status == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Work Status")
+	if req.Hire_date == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Hire date is required"})
 	}
+	if req.Work_status == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Work status is required"})
+	}
+	if req.Salary == 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Salary is required"})
+	}
+
+	// เตรียมข้อมูลที่จะ Insert
 	data := map[string]interface{}{
-		"employee_id":      employee_id,
-		"first_name":       first_name,
-		"last_name":        last_name,
-		"position_id":      position_id,
-		"phone_number":     phone_number,
-		"department_id":    department_id,
-		"salary":           salary,
-		"email":            email,
-		"hire_date":        hire_date,
-		"resignation_date": resignationDate, // optional
-		"work_status":      work_status,
+		"employee_id":      req.Employee_id,
+		"first_name":       req.First_name,
+		"last_name":        req.Last_name,
+		"position_name":    req.Position_name, // ใช้ position_name ใน JSON
+		"phone_number":     req.Phone_number,
+		"department_name":  req.Department_name, // ใช้ department_name ใน JSON
+		"salary":           req.Salary,
+		"email":            req.Email,
+		"hire_date":        req.Hire_date,
+		"resignation_date": nil, // default เป็น nil ก่อน
+		"work_status":      req.Work_status,
 	}
 
+	// ถ้า resignation_date มีค่า (ไม่ว่าง) ให้ใส่
+	if req.Resignation_date != "" {
+		data["resignation_date"] = req.Resignation_date
+	}
+
+	// Insert ข้อมูลไปยังฐานข้อมูล
 	rowsAffected, err := services.AddEmployee(data)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -128,12 +130,14 @@ func AddEmployee(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Employee added successfully"})
 }
+
+
 func GetAllEmployee(c echo.Context) error {
-	patient, err := services.GetAllEmployee()
+	employee, err := services.GetAllEmployee()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, patient)
+	return c.JSON(http.StatusOK, employee)
 }
 func GetEmployee(c echo.Context) error {
 	id := c.Param("id")

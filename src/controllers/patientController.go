@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 func AddPatientAppointment(c echo.Context) error{
-		if c.Request().Header.Get("Content-Type") != "application/json" {
+	if c.Request().Header.Get("Content-Type") != "application/json" {
 		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
 	}
 	// Log raw request body

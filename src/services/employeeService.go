@@ -46,7 +46,7 @@ func GetEmployee(employeeID string) (*models.Employee, error) {
 		"Employee.work_status",
 	}
 	// กำหนด joinTables แบบ full JOIN statement
-	joinTables := "Department ON Employee.department_id = Department.department_id INNER JOIN Position ON Employee.position_id = Position.position_id"
+	joinTables := "Position ON employee.position_id = position.position_id JOIN Department ON position.department_id = department.department_id"
 
 	// WHERE clause + arguments
 	whereCondition := "Employee.employee_id = $1"
@@ -122,7 +122,7 @@ func GetAllEmployee() ([]models.Employee, error) {
 		"Employee.resignation_date",
 		"Employee.work_status",
 	}
-	joinTables := "Department ON Employee.department_id = Department.department_id INNER JOIN Position ON Employee.position_id = Position.position_id"
+	joinTables := "Position ON employee.position_id = position.position_id JOIN Department ON position.department_id = department.department_id"
 
 	results, err := SelectData(
 		"Employee",      // main table

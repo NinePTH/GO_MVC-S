@@ -59,7 +59,6 @@ CREATE TABLE Employee(
     last_name VARCHAR(100) NOT NULL,
     position_id VARCHAR(4),
     phone_number VARCHAR(15) NOT NULL, 
-    department_id VARCHAR(4),
     salary DECIMAL(10,2) NOT NULL,
     email VARCHAR(50) UNIQUE NOT NULL,
     hire_date DATE NOT NULL,
@@ -69,7 +68,6 @@ CREATE TABLE Employee(
     -- Constraints
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL,
     FOREIGN KEY (position_id) REFERENCES Position(position_id) ON DELETE SET NULL,
-    FOREIGN KEY (department_id) REFERENCES Department(department_id) ON DELETE SET NULL,
     
     CHECK (phone_number ~ '^[0-9]+$'),
     CHECK (
@@ -85,7 +83,7 @@ CREATE TABLE Patient_Appointment (
     time TIME NOT NULL,
     date DATE NOT NULL,
     topic TEXT NOT NULL,
-    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id)
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE SET NULL
 );
 
 CREATE TABLE Disease (
@@ -98,8 +96,8 @@ CREATE TABLE Patient_chronic_disease (
     id SERIAL PRIMARY KEY,
     patient_id VARCHAR(4) NOT NULL,
     disease_id VARCHAR(4) NOT NULL,
-    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id),
-    FOREIGN KEY (disease_id) REFERENCES Disease(disease_id),
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (disease_id) REFERENCES Disease(disease_id) ON DELETE CASCADE,
     UNIQUE (patient_id, disease_id)
 );
 
@@ -113,7 +111,7 @@ CREATE TABLE Patient_drug_allergy (
     id SERIAL PRIMARY KEY,
     patient_id VARCHAR(4) NOT NULL,
     drug_id VARCHAR(4) NOT NULL,
-    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id),
-    FOREIGN KEY (drug_id) REFERENCES drug(drug_id),
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (drug_id) REFERENCES drug(drug_id) ON DELETE CASCADE,
     UNIQUE (patient_id, drug_id)
 );

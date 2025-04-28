@@ -8,6 +8,7 @@ CREATE TABLE Users (
 
 CREATE TYPE blood_group AS ENUM ('A', 'B', 'AB', 'O');
 CREATE TYPE sex AS ENUM ('male', 'female');
+CREATE TYPE status AS ENUM ('yes','no');
 CREATE TABLE Patient (
     patient_id VARCHAR(4) PRIMARY KEY,
     user_id INT UNIQUE,
@@ -18,7 +19,7 @@ CREATE TABLE Patient (
     gender sex NOT NULL,
     blood_type blood_group NOT NULL,
     email VARCHAR(50) UNIQUE NOT NULL,
-    health_insurance BOOLEAN NOT NULL,
+    health_insurance status NOT NULL,
     address TEXT NOT NULL,
     phone_number VARCHAR(15) NOT NULL,
     id_card_number VARCHAR(13) NOT NULL,
@@ -47,17 +48,17 @@ VALUES
 INSERT INTO Patient (
     patient_id, first_name, last_name, age, date_of_birth, gender,
     blood_type, email, health_insurance, address, phone_number,
-    id_card_number, ongoing_treatment,unhealthy habits
+    id_card_number, ongoing_treatment, unhealthy_habits
 )
 VALUES
 ( 'P001', 'John', 'Doe', 30, '1994-05-15', 'male', 'A', 
- 'john.doe@example.com', TRUE, '123 Main St, Cityville', 
+ 'john.doe@example.com', 'yes', '123 Main St, Cityville', 
  '0123456789', '1234567890123', 'Hypertension','Drunk'),
 ( 'P002', 'Jane', 'Smith', 45, '1979-11-22', 'female', 'B',
- 'jane.smith@example.com', FALSE, '456 Oak Ave, Townsville', 
+ 'jane.smith@example.com', 'yes', '456 Oak Ave, Townsville', 
  '0987654321', '3210987654321', 'Diabetes','Drunk'),
 ( 'P003', 'Mary', 'Johnson', 25, '1999-08-10', 'female', 'O',
- 'mary.johnson@example.com', TRUE, '789 Pine Rd, Villagetown', 
+ 'mary.johnson@example.com', 'no', '789 Pine Rd, Villagetown', 
  '0876543210', '6543210987654', 'Healthy','None');
 
  INSERT INTO Medical_history (patient_id, detail, time, date)
@@ -80,7 +81,8 @@ INSERT INTO DEPARTMENT VALUES
 ('D007', 'Gastroenterology'),
 ('D008', 'Pulmonology'),
 ('D009', 'Nephrology'),
-('D010', 'Endocrinology');
+('D010', 'Endocrinology'),
+('D011', 'Human Resource');
 
 CREATE TABLE Position (
 position_id VARCHAR(4) PRIMARY KEY,
@@ -90,7 +92,7 @@ FOREIGN KEY (department_id) REFERENCES Department(department_id)
 );
 
 INSERT INTO Position Values 
-('P001','D001','doctor'),
+('P001','D001','Doctor'),
 ('P002','D002','Nurse'),
 ('P003','D001','Nurse'),
 ('P004','D003','Nurse'),
@@ -99,9 +101,10 @@ INSERT INTO Position Values
 ('P007','D001','Doctor'),
 ('P008','D003','Nurse'),
 ('P009','D009','Doctor'),
-('P010','D010','Doctor');
+('P010','D010','Doctor'),
+('P011', 'D011', 'HR');
 
-CREATE TYPE status AS ENUM ('yes','no');
+
 
 CREATE TABLE Employee(
     employee_id VARCHAR(4) PRIMARY KEY,
@@ -110,7 +113,6 @@ CREATE TABLE Employee(
     last_name VARCHAR(100) NOT NULL,
     position_id VARCHAR(4),
     phone_number VARCHAR(15) NOT NULL, 
-    department_id VARCHAR(4),
     salary DECIMAL(10,2) NOT NULL,
     email VARCHAR(50) UNIQUE NOT NULL,
     hire_date DATE NOT NULL,
@@ -120,7 +122,6 @@ CREATE TABLE Employee(
     -- Constraints
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL,
     FOREIGN KEY (position_id) REFERENCES Position(position_id) ON DELETE SET NULL,
-    FOREIGN KEY (department_id) REFERENCES Department(department_id) ON DELETE SET NULL,
     
     CHECK (phone_number ~ '^[0-9]+$'),
     CHECK (
@@ -131,10 +132,11 @@ CREATE TABLE Employee(
 );
 
 INSERT INTO Employee VALUES
-('E001',NULL, 'John', 'Daltin', 'P001', '0812345678', 'D001', 45000.00, '.wong@example.com', '2022-01-15', NULL, 'yes'),
-('E002',NULL, 'Dim', 'Smith', 'P002', '0823456789', 'D002', 50000.00, 'bob.chan@example.com', '2021-06-10', '2023-08-01', 'no'),
-('E003',NULL, 'Jimmy', 'Tompson', 'P003', '0834567890', 'D003', 52000.00, 'cindy.liu@example.com', '2023-02-20', NULL, 'yes'),
-('E004',NULL, 'Brook', 'Sudlor', 'P004', '0845678901', 'D004', 48000.00, 'david.ng@example.com', '2020-12-01', '2024-03-15', 'no');
+('E001',NULL, 'John', 'Daltin', 'P001', '0812345678', 45000.00, '.wong@example.com', '2022-01-15', NULL, 'yes'),
+('E002',NULL, 'Dim', 'Smith', 'P002', '0823456789', 50000.00, 'bob.chan@example.com', '2021-06-10', '2023-08-01', 'no'),
+('E003',NULL, 'Jimmy', 'Tompson', 'P003', '0834567890', 52000.00, 'cindy.liu@example.com', '2023-02-20', NULL, 'yes'),
+('E004',NULL, 'Brook', 'Sudlor', 'P004', '0845678901', 48000.00, 'david.ng@example.com', '2020-12-01', '2024-03-15', 'no'),
+('E005',NULL, 'Nine', 'Ok', 'P011', '0845678901', 48000.00, 'ok@example.com', '2020-12-01', '2024-03-15', 'no');;
 
 
 CREATE TABLE Patient_Appointment (
@@ -143,7 +145,7 @@ CREATE TABLE Patient_Appointment (
     time TIME NOT NULL,
     date DATE NOT NULL,
     topic TEXT NOT NULL,
-    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE SET NULL
 );
 
 INSERT INTO Patient_Appointment (appointment_id, patient_id, time, date, topic) VALUES
@@ -177,14 +179,14 @@ CREATE TABLE Patient_chronic_disease (
     disease_id VARCHAR(4) NOT NULL,
     FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE,
     FOREIGN KEY (disease_id) REFERENCES Disease(disease_id) ON DELETE CASCADE,
-    UNIQUE (patient_id, disease_id) 
+    UNIQUE (patient_id, disease_id)
 );
 
-INSERT INTO Patient_chronic_disease VALUES
-(1, 'P001', 'I001'),
-(2, 'P001', 'I003'),
-(3, 'P002', 'I002'),
-(4, 'P003', 'I004');
+INSERT INTO Patient_chronic_disease (patient_id, disease_id)
+VALUES	('P001', 'I001'),
+		('P001', 'I003'),
+		('P002', 'I002'),
+		('P003', 'I004');
 
 
 CREATE TABLE drug (
@@ -215,8 +217,8 @@ CREATE TABLE Patient_drug_allergy (
     UNIQUE (patient_id, drug_id)
 );
 
-INSERT INTO Patient_drug_allergy VALUES
-(1, 'P001', 'R001'),
-(2, 'P002', 'R003'),
-(3, 'P003', 'R004');
+INSERT INTO Patient_drug_allergy (patient_id, drug_id)
+VALUES	('P001', 'R001'),
+		('P002', 'R003'),
+		('P003', 'R004');
 

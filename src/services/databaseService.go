@@ -22,9 +22,9 @@ func SelectData(table string, fields []string, where bool, whereCon string, wher
 	// If join is enabled
 	if join {
 		if joinCondition != "" {
-			query += " INNER JOIN " + joinTable + " ON " + joinCondition
+			query += " JOIN " + joinTable + " ON " + joinCondition
 		} else {
-			query += " INNER JOIN " + joinTable
+			query += " JOIN " + joinTable
 		}
 	}
 
