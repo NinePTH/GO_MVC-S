@@ -23,6 +23,7 @@ CREATE TABLE Patient (
     phone_number VARCHAR(15) NOT NULL,
     id_card_number VARCHAR(13) NOT NULL,
     ongoing_treatment VARCHAR(50) NOT NULL,
+    unhealthy_habits VARCHAR(50) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL,
     CHECK (phone_number ~ '^[0-9]+$'),
 	UNIQUE (first_name, last_name)
@@ -46,21 +47,22 @@ VALUES
 INSERT INTO Patient (
     patient_id, first_name, last_name, age, date_of_birth, gender,
     blood_type, email, health_insurance, address, phone_number,
-    id_card_number, ongoing_treatment
+    id_card_number, ongoing_treatment,unhealthy habits
 )
 VALUES
 ( 'P001', 'John', 'Doe', 30, '1994-05-15', 'male', 'A', 
  'john.doe@example.com', TRUE, '123 Main St, Cityville', 
- '0123456789', '1234567890123', 'Hypertension'),
+ '0123456789', '1234567890123', 'Hypertension','Drunk'),
 ( 'P002', 'Jane', 'Smith', 45, '1979-11-22', 'female', 'B',
  'jane.smith@example.com', FALSE, '456 Oak Ave, Townsville', 
- '0987654321', '3210987654321', 'Diabetes'),
+ '0987654321', '3210987654321', 'Diabetes','Drunk'),
 ( 'P003', 'Mary', 'Johnson', 25, '1999-08-10', 'female', 'O',
  'mary.johnson@example.com', TRUE, '789 Pine Rd, Villagetown', 
- '0876543210', '6543210987654', 'Healthy');
+ '0876543210', '6543210987654', 'Healthy','None');
 
  INSERT INTO Medical_history (patient_id, detail, time, date)
 VALUES ('P001', 'Fever and headache and maybe kys', '10:30:00', '2025-04-08');
+VALUES ('P002', 'Fever and stomachache', '10:30:00', '2025-04-08');
 
 
 CREATE TABLE Department(
