@@ -15,4 +15,5 @@ type GeneralPatientInformation struct {
 	Phone_number string `json:"phone_number"`
 	Id_card_number string `json:"id_card_number"`
 	Ongoing_treatment string `json:"ongoing_treatment"`
+	Unhealthy_habits string `json:"unhealthy_habits"`
 }
