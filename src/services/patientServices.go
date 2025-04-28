@@ -6,6 +6,28 @@ import (
 	"time"
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 )
+func AddPatientHistory(req patients.AddPatientHistory) error {
+	// log ข้อมูลที่รับเข้ามา
+	fmt.Printf("Received AddPatientRequest: %+v\n", req)
+
+	patientMap := map[string]interface{}{
+		"patient_id":        req.Patient_id,
+		"detail":        req.Detail,
+		"time":         req.Time,
+		"date":               req.Date,
+	}
+
+	fmt.Printf("Inserting patient: %+v\n", patientMap)
+
+	// Insert to patient table
+	table := "Medical_history"
+	_, err := InsertData(table, patientMap)
+	if err != nil {
+		return fmt.Errorf("insert patient failed: %w", err)
+	}
+	return nil
+}
+
 func DeleteByPatientID(table string, patientID string) error {
 	condition := "patient_id = $1"
 	conditionValues := []interface{}{patientID}
