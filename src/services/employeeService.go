@@ -61,6 +61,7 @@ func GetEmployee(employeeID string) (*models.Employee, error) {
 		true,           // join
 		joinTables,     // joinTable ที่รวม INNER JOIN ไว้
 		"",             // joinCondition เว้นว่างเพราะรวมไว้แล้ว
+		"",
 	)
 
 	if err != nil {
@@ -132,6 +133,7 @@ func GetAllEmployee() ([]models.Employee, error) {
 		true,            // ใช้ JOIN
 		joinTables,      // joinTables ที่รวม INNER JOIN ไว้แล้ว
 		"",              // joinCondition เว้นว่าง
+		"ORDER BY employee_id DESC",
 	)
 
 	if err != nil {

@@ -35,7 +35,7 @@ CREATE TABLE Medical_history (
 	detail TEXT NOT NULL,
 	time TIME NOT NULL,
 	date date NOT NULL,
-	FOREIGN KEY (patient_id) REFERENCES Patient(patient_id)
+	FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE
 );
 
 INSERT INTO Users (username, password, role)
@@ -143,7 +143,7 @@ CREATE TABLE Patient_Appointment (
     time TIME NOT NULL,
     date DATE NOT NULL,
     topic TEXT NOT NULL,
-    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id)
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE
 );
 
 INSERT INTO Patient_Appointment (appointment_id, patient_id, time, date, topic) VALUES
@@ -175,9 +175,9 @@ CREATE TABLE Patient_chronic_disease (
     id SERIAL PRIMARY KEY,
     patient_id VARCHAR(4) NOT NULL,
     disease_id VARCHAR(4) NOT NULL,
-    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id),
-    FOREIGN KEY (disease_id) REFERENCES Disease(disease_id),
-    UNIQUE (patient_id, disease_id)
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (disease_id) REFERENCES Disease(disease_id) ON DELETE CASCADE,
+    UNIQUE (patient_id, disease_id) 
 );
 
 INSERT INTO Patient_chronic_disease VALUES
@@ -210,8 +210,8 @@ CREATE TABLE Patient_drug_allergy (
     id SERIAL PRIMARY KEY,
     patient_id VARCHAR(4) NOT NULL,
     drug_id VARCHAR(4) NOT NULL,
-    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id),
-    FOREIGN KEY (drug_id) REFERENCES drug(drug_id),
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (drug_id) REFERENCES drug(drug_id) ON DELETE CASCADE,
     UNIQUE (patient_id, drug_id)
 );
 

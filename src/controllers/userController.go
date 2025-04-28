@@ -9,10 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-
-
-
-
 func UpdateUser(c echo.Context) error {
 	id := c.QueryParam("id") // Get the user ID from the query parameter
 	if id == "" {

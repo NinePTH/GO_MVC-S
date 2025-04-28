@@ -6,6 +6,27 @@ import (
 	"time"
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 )
+func AddPatientAppointment(req patients.AddPatientAppointment) error {
+	// log ข้อมูลที่รับเข้ามา
+	fmt.Printf("Received AddPatientRequest: %+v\n", req)
+
+	patientMap := map[string]interface{}{
+		"patient_id":        req.Patient_id,
+		"time":        req.Time,
+		"date":         req.Date,
+		"topic":               req.Topic,
+	}
+
+	fmt.Printf("Inserting patient: %+v\n", patientMap)
+
+	// Insert to patient table
+	table := "patient_appointment"
+	_, err := InsertData(table, patientMap)
+	if err != nil {
+		return fmt.Errorf("insert patient failed: %w", err)
+	}
+	return nil
+}
 func AddPatientHistory(req patients.AddPatientHistory) error {
 	// log ข้อมูลที่รับเข้ามา
 	fmt.Printf("Received AddPatientRequest: %+v\n", req)
@@ -55,7 +76,7 @@ func UpdatePatient(req *patients.AddPatientRequest) (int64, error) {
 
 	addIfNotEmpty("first_name", req.Patient.First_name)
 	addIfNotEmpty("last_name", req.Patient.Last_name)
-	addIfNotEmpty("age", fmt.Sprintf("%v", req.Patient.Age))
+	//addIfNotEmpty("age", fmt.Sprintf("%v", req.Patient.Age))
 	addIfNotEmpty("date_of_birth", req.Patient.Date_of_birth)
 	addIfNotEmpty("gender", req.Patient.Gender)
 	addIfNotEmpty("blood_type", req.Patient.Blood_type)
@@ -67,8 +88,18 @@ func UpdatePatient(req *patients.AddPatientRequest) (int64, error) {
 	addIfNotEmpty("unhealthy_habits", req.Patient.Unhealthy_habits)
 
 	// health_insurance (boolean) ต้องใส่เสมอ
-	data["health_insurance"] = req.Patient.Health_insurance
+	// data["health_insurance"] = req.Patient.Health_insurance
+	// if req.Patient.Health_insurance != false {
+	// 	data["health_insurance"] = req.Patient.Health_insurance
+	// }
 
+
+ // เช็กค่า 'age' ว่ามีการส่งมาหรือไม่
+ if req.Patient.Age != 0 {  // ใช้ค่า default 0 เช็กว่ามีการส่งมาหรือไม่
+	data["age"] = fmt.Sprintf("%v", req.Patient.Age)
+}
+
+	
 	table := "Patient"
 	condition := "patient_id = $1"
 	conditionValues := []interface{}{patientID}
@@ -175,7 +206,7 @@ func GetPatient(id string) ([]patients.GetPatientResponse, error) {
 	table := "Patient"
 	fields := []string{"*"}
 
-	result, err := SelectData(table, fields, true, "patient_id = $1", []interface{}{id}, false, "", "")
+	result, err := SelectData(table, fields, true, "patient_id = $1", []interface{}{id}, false, "", "","")
 
 	if err != nil {
 		return nil, err
@@ -224,7 +255,7 @@ func GetPatient(id string) ([]patients.GetPatientResponse, error) {
 	fields = []string{"*"}
 	whereCondition := "patient_id = $1"
 	args := []interface{}{patient_id}
-	medicalResults, err := SelectData(table, fields, true, whereCondition, args, false, "", "")
+	medicalResults, err := SelectData(table, fields, true, whereCondition, args, false, "", "","")
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +278,7 @@ func GetPatient(id string) ([]patients.GetPatientResponse, error) {
 	fields = []string{"disease_name"}
 	whereCondition = "patient_id = $1"
 	args = []interface{}{patient_id}
-	chronicResults, err := SelectData(table, fields, true, whereCondition, args, true, jointables, "")
+	chronicResults, err := SelectData(table, fields, true, whereCondition, args, true, jointables, "","")
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +302,8 @@ func GetPatient(id string) ([]patients.GetPatientResponse, error) {
 		args,
 		true,
 		jointables,
-		"")
+		"",
+	    "")
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +328,7 @@ func GetPatient(id string) ([]patients.GetPatientResponse, error) {
 func GetAllPatients() ([]patients.GetPatientResponse, error) {
 	table := "patient"
 	fields := []string{"*"}
-	results, err := SelectData(table, fields, false, "", nil, false, "", "")
+	results, err := SelectData(table, fields, false, "", nil, false, "", "","ORDER BY patient_id DESC")
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +359,7 @@ func GetAllPatients() ([]patients.GetPatientResponse, error) {
 		fields = []string{"*"}
 		whereCondition := "patient_id = $1"
 		args := []interface{}{patient_id}
-		medicalResults, err := SelectData(table, fields, true, whereCondition, args, false, "", "")
+		medicalResults, err := SelectData(table, fields, true, whereCondition, args, false, "", "","")
 		if err != nil {
 			return nil, err
 		}
@@ -350,7 +382,7 @@ func GetAllPatients() ([]patients.GetPatientResponse, error) {
 		fields = []string{"disease_name"}
 		whereCondition = "patient_id = $1"
 		args = []interface{}{patient_id}
-		chronicResults, err := SelectData(table, fields, true, whereCondition, args, true, jointables, "")
+		chronicResults, err := SelectData(table, fields, true, whereCondition, args, true, jointables, "","")
 		if err != nil {
 			return nil, err
 		}
@@ -374,7 +406,8 @@ func GetAllPatients() ([]patients.GetPatientResponse, error) {
 			args,
 			true,
 			jointables,
-			"")
+			"",
+		    "")
 		if err != nil {
 			return nil, err
 		}

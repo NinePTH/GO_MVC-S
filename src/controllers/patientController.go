@@ -10,6 +10,33 @@ import (
 	"github.com/NinePTH/GO_MVC-S/src/services"
 	"github.com/labstack/echo/v4"
 )
+func AddPatientAppointment(c echo.Context) error{
+		if c.Request().Header.Get("Content-Type") != "application/json" {
+		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+	}
+	// Log raw request body
+	body, _ := io.ReadAll(c.Request().Body)
+	fmt.Println("Raw Request Body:", string(body))
+	c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body for Bind()
+
+	var req patients.AddPatientAppointment
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request body")
+	}
+
+	// check all fields of patient must be filled
+	if req.Patient_id == "" || req.Topic == "" || req.Time == "" || req.Date == "" {
+		return c.JSON(http.StatusBadRequest, "All patient fields must be provided")
+	}
+
+	err := services.AddPatientAppointment(req)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "Patient appointment added successfully")
+}
 func AddPatientHistory (c echo.Context)error {
 	if c.Request().Header.Get("Content-Type") != "application/json" {
 		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
@@ -38,7 +65,6 @@ func AddPatientHistory (c echo.Context)error {
 	return c.JSON(http.StatusOK, "Patient history added successfully")
 }
 
-
 func UpdatePatient(c echo.Context) error {
 	if c.Request().Header.Get("Content-Type") != "application/json" {
 		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
@@ -59,7 +85,6 @@ func UpdatePatient(c echo.Context) error {
 		"rows_affected":  rowsAffected,
 	})
 }
-
 
 func GetPatient(c echo.Context) error {
 	id := c.Param("id")
