@@ -17,23 +17,76 @@ func DeleteByPatientID(table string, patientID string) error {
 	return nil
 }
 
+func UpdatePatient(req *patients.AddPatientRequest) (int64, error) {
+	patientID := req.Patient.Patient_id
+	if patientID == "" {
+		return 0, fmt.Errorf("missing patient_id")
+	}
 
+	// เตรียมข้อมูลที่จะ update
+	data := make(map[string]interface{})
+	addIfNotEmpty := func(key, value string) {
+		if value != "" {
+			data[key] = value
+		}
+	}
 
+	addIfNotEmpty("first_name", req.Patient.First_name)
+	addIfNotEmpty("last_name", req.Patient.Last_name)
+	addIfNotEmpty("age", fmt.Sprintf("%v", req.Patient.Age))
+	addIfNotEmpty("date_of_birth", req.Patient.Date_of_birth)
+	addIfNotEmpty("gender", req.Patient.Gender)
+	addIfNotEmpty("blood_type", req.Patient.Blood_type)
+	addIfNotEmpty("email", req.Patient.Email)
+	addIfNotEmpty("address", req.Patient.Address)
+	addIfNotEmpty("phone_number", req.Patient.Phone_number)
+	addIfNotEmpty("id_card_number", req.Patient.Id_card_number)
+	addIfNotEmpty("ongoing_treatment", req.Patient.Ongoing_treatment)
+	addIfNotEmpty("unhealthy_habits", req.Patient.Unhealthy_habits)
 
+	// health_insurance (boolean) ต้องใส่เสมอ
+	data["health_insurance"] = req.Patient.Health_insurance
 
-
-func UpdatePatient(id string, data map[string]interface{}) (int64, error) {
 	table := "Patient"
 	condition := "patient_id = $1"
-	conditionValues := []interface{}{id}
+	conditionValues := []interface{}{patientID}
 
-	// Call UpdateData with correct parameters
-	rowsAffected, err := UpdateData(table, data, condition, conditionValues)
-	if err != nil {
-		return 0, err
+	var totalRowsAffected int64 = 0
+
+	// อัปเดตข้อมูล Patient
+	if len(data) > 0 {
+		rowsAffected, err := UpdateData(table, data, condition, conditionValues)
+		if err != nil {
+			return 0, err
+		}
+		totalRowsAffected += rowsAffected
 	}
-	return rowsAffected, nil
+
+	// ============ Chronic Diseases ============
+	if len(req.PatientChronicDisease) > 0 {
+		table := "patient_chronic_disease"
+		// ลบของเก่า
+		if err := DeleteByPatientID(table, patientID); err != nil {
+			return totalRowsAffected, fmt.Errorf("failed to delete chronic diseases: %v", err)
+		}
+
+		// Insert ใหม่
+		for _, chronic := range req.PatientChronicDisease {
+			chronicMap := map[string]interface{}{
+				"patient_id": patientID,
+				"disease_id": chronic.DiseaseID,
+			}
+			_, err := InsertData(table, chronicMap)
+			if err != nil {
+				return totalRowsAffected, fmt.Errorf("insert chronic disease failed: %v", err)
+			}
+			totalRowsAffected++ // นับเพิ่มทีละ insert
+		}
+	}
+
+	return totalRowsAffected, nil
 }
+
 
 func AddPatient(req patients.AddPatientRequest) error {
 	// log ข้อมูลที่รับเข้ามา
