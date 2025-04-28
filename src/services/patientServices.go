@@ -91,7 +91,7 @@ func AddPatient(req patients.AddPatientRequest) error {
 	return nil
 }
 
-func GetPatient(id string) ([]patients.GetPatientResponse, error) {
+func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	table := "Patient"
 	fields := []string{"*"}
 
@@ -119,8 +119,6 @@ func GetPatient(id string) ([]patients.GetPatientResponse, error) {
 	id_card_number := result[0]["id_card_number"].(string)
 	ongoing_treatment := result[0]["ongoing_treatment"].(string)
 	unhealthy_habits := result[0]["unhealthy_habits"].(string)
-
-	var patientResponses []patients.GetPatientResponse
 
 	var patient = patients.GeneralPatientInformation{
 		Patient_id:        patient_id,
@@ -209,8 +207,7 @@ func GetPatient(id string) ([]patients.GetPatientResponse, error) {
 		PatientChronicDisease: chronicDiseases,
 		PatientDrugAllergy:    drugAllergies,
 	}
-	patientResponses = append(patientResponses, response)
-	return patientResponses, nil
+	return &response, nil
 }
 
 func GetAllPatients() ([]patients.GetPatientResponse, error) {
