@@ -8,15 +8,16 @@ import (
 
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 )
+
 func AddPatientAppointment(req patients.AddPatientAppointment) error {
 	// log ข้อมูลที่รับเข้ามา
 	fmt.Printf("Received AddPatientRequest: %+v\n", req)
 
 	patientMap := map[string]interface{}{
-		"patient_id":        req.Patient_id,
-		"time":        req.Time,
-		"date":         req.Date,
-		"topic":               req.Topic,
+		"patient_id": req.Patient_id,
+		"time":       req.Time,
+		"date":       req.Date,
+		"topic":      req.Topic,
 	}
 
 	fmt.Printf("Inserting patient: %+v\n", patientMap)
@@ -34,10 +35,10 @@ func AddPatientHistory(req patients.AddPatientHistory) error {
 	fmt.Printf("Received AddPatientRequest: %+v\n", req)
 
 	patientMap := map[string]interface{}{
-		"patient_id":        req.Patient_id,
-		"detail":        req.Detail,
-		"time":         req.Time,
-		"date":               req.Date,
+		"patient_id": req.Patient_id,
+		"detail":     req.Detail,
+		"time":       req.Time,
+		"date":       req.Date,
 	}
 
 	fmt.Printf("Inserting patient: %+v\n", patientMap)
@@ -95,13 +96,11 @@ func UpdatePatient(req *patients.AddPatientRequest) (int64, error) {
 	// 	data["health_insurance"] = req.Patient.Health_insurance
 	// }
 
+	// เช็กค่า 'age' ว่ามีการส่งมาหรือไม่
+	if req.Patient.Age != 0 { // ใช้ค่า default 0 เช็กว่ามีการส่งมาหรือไม่
+		data["age"] = fmt.Sprintf("%v", req.Patient.Age)
+	}
 
- // เช็กค่า 'age' ว่ามีการส่งมาหรือไม่
- if req.Patient.Age != 0 {  // ใช้ค่า default 0 เช็กว่ามีการส่งมาหรือไม่
-	data["age"] = fmt.Sprintf("%v", req.Patient.Age)
-}
-
-	
 	table := "Patient"
 	condition := "patient_id = $1"
 	conditionValues := []interface{}{patientID}
@@ -142,7 +141,6 @@ func UpdatePatient(req *patients.AddPatientRequest) (int64, error) {
 	return totalRowsAffected, nil
 }
 
-
 func AddPatient(req patients.AddPatientRequest) error {
 	// log ข้อมูลที่รับเข้ามา
 	fmt.Printf("Received AddPatientRequest: %+v\n", req)
@@ -179,7 +177,7 @@ func AddPatient(req patients.AddPatientRequest) error {
 			"patient_id": p.Patient_id,
 			"disease_id": chronic.DiseaseID,
 		}
-		
+
 		fmt.Printf("Chronic disease loop: patient_id = %s, disease_id = %s\n", p.Patient_id, chronic.DiseaseID)
 
 		table = "patient_chronic_disease"
@@ -208,7 +206,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	table := "Patient"
 	fields := []string{"*"}
 
-	result, err := SelectData(table, fields, true, "patient_id = $1", []interface{}{id}, false, "", "","")
+	result, err := SelectData(table, fields, true, "patient_id = $1", []interface{}{id}, false, "", "", "")
 
 	if err != nil {
 		return nil, err
@@ -255,7 +253,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	fields = []string{"*"}
 	whereCondition := "patient_id = $1"
 	args := []interface{}{patient_id}
-	medicalResults, err := SelectData(table, fields, true, whereCondition, args, false, "", "","")
+	medicalResults, err := SelectData(table, fields, true, whereCondition, args, false, "", "", "")
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +276,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	fields = []string{"disease_name"}
 	whereCondition = "patient_id = $1"
 	args = []interface{}{patient_id}
-	chronicResults, err := SelectData(table, fields, true, whereCondition, args, true, jointables, "","")
+	chronicResults, err := SelectData(table, fields, true, whereCondition, args, true, jointables, "", "")
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +301,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 		true,
 		jointables,
 		"",
-	    "")
+		"")
 	if err != nil {
 		return nil, err
 	}
@@ -314,9 +312,37 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 		})
 	}
 
+	// Patient_appointment (Select only 1 latest appointment)
+	table = "patient_appointment"
+	fields = []string{"*"}
+	args = []interface{}{patient_id}
+	allergyResults, err = SelectData(
+		table,
+		fields,
+		true,
+		"patient_id = $1",
+		args,
+		false,
+		"",
+		"",
+		"ORDER BY date DESC, time DESC LIMIT 1")
+
+	if err != nil {
+		return nil, err
+	}
+	var patient_appointment []patients.PatientAppointment
+	for _, row := range allergyResults {
+		patient_appointment = append(patient_appointment, patients.PatientAppointment{
+			Time:  row["time"].(time.Time).Format("15:04:05"),
+			Date:  row["date"].(time.Time).Format("02-01-2006"),
+			Topic: row["topic"].(string),
+		})
+	}
+
 	// รวมร่าง json response = patient_model + medical_history + patient_chronicdisease + patientdrug_allerygy
 	response := patients.GetPatientResponse{
 		PatientGeneralInfo:    patient,
+		PatientAppointment:    patient_appointment,
 		PatientMedicalHistory: medical_history,
 		PatientChronicDisease: chronicDiseases,
 		PatientDrugAllergy:    drugAllergies,
@@ -327,7 +353,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 func GetAllPatients() ([]patients.GetPatientResponse, error) {
 	table := "patient"
 	fields := []string{"*"}
-	results, err := SelectData(table, fields, false, "", nil, false, "", "","ORDER BY patient_id DESC")
+	results, err := SelectData(table, fields, false, "", nil, false, "", "", "ORDER BY patient_id DESC")
 	if err != nil {
 		return nil, err
 	}
@@ -358,7 +384,7 @@ func GetAllPatients() ([]patients.GetPatientResponse, error) {
 		fields = []string{"*"}
 		whereCondition := "patient_id = $1"
 		args := []interface{}{patient_id}
-		medicalResults, err := SelectData(table, fields, true, whereCondition, args, false, "", "","")
+		medicalResults, err := SelectData(table, fields, true, whereCondition, args, false, "", "", "")
 		if err != nil {
 			return nil, err
 		}
@@ -375,13 +401,13 @@ func GetAllPatients() ([]patients.GetPatientResponse, error) {
 			})
 		}
 
-		// Chronic diseases (With INNER JOIN)
+		// Chronic diseases (With JOIN)
 		table = "patient_chronic_disease"
 		jointables := "disease ON patient_chronic_disease.disease_id = disease.disease_id"
 		fields = []string{"disease_name"}
 		whereCondition = "patient_id = $1"
 		args = []interface{}{patient_id}
-		chronicResults, err := SelectData(table, fields, true, whereCondition, args, true, jointables, "","")
+		chronicResults, err := SelectData(table, fields, true, whereCondition, args, true, jointables, "", "")
 		if err != nil {
 			return nil, err
 		}
@@ -406,7 +432,7 @@ func GetAllPatients() ([]patients.GetPatientResponse, error) {
 			true,
 			jointables,
 			"",
-		    "")
+			"")
 		if err != nil {
 			return nil, err
 		}
@@ -417,9 +443,37 @@ func GetAllPatients() ([]patients.GetPatientResponse, error) {
 			})
 		}
 
-		// รวมร่าง json response = patient_model + medical_history + patient_chronicdisease + patientdrug_allerygy
+		// Patient_appointment (Select only 1 latest appointment)
+		table = "patient_appointment"
+		fields = []string{"*"}
+		args = []interface{}{patient_id}
+		allergyResults, err = SelectData(
+			table,
+			fields,
+			true,
+			"patient_id = $1",
+			args,
+			false,
+			"",
+			"",
+			"ORDER BY date DESC, time DESC LIMIT 1")
+
+		if err != nil {
+			return nil, err
+		}
+		var patient_appointment []patients.PatientAppointment
+		for _, row := range allergyResults {
+			patient_appointment = append(patient_appointment, patients.PatientAppointment{
+				Time:  row["time"].(time.Time).Format("15:04:05"),
+				Date:  row["date"].(time.Time).Format("02-01-2006"),
+				Topic: row["topic"].(string),
+			})
+		}
+
+		// รวมร่าง json response = patient_model + medical_history + Patient_appointment + patient_chronicdisease + patientdrug_allerygy
 		response := patients.GetPatientResponse{
 			PatientGeneralInfo:    patient,
+			PatientAppointment:    patient_appointment,
 			PatientMedicalHistory: medical_history,
 			PatientChronicDisease: chronicDiseases,
 			PatientDrugAllergy:    drugAllergies,

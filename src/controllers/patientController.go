@@ -1,4 +1,4 @@
-//limit 
+// limit
 package controllers
 
 import (
@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 	"github.com/NinePTH/GO_MVC-S/src/services"
 	"github.com/labstack/echo/v4"
 )
-func AddPatientAppointment(c echo.Context) error{
+
+func AddPatientAppointment(c echo.Context) error {
 	if c.Request().Header.Get("Content-Type") != "application/json" {
 		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
 	}
@@ -37,7 +39,7 @@ func AddPatientAppointment(c echo.Context) error{
 
 	return c.JSON(http.StatusOK, "Patient appointment added successfully")
 }
-func AddPatientHistory (c echo.Context)error {
+func AddPatientHistory(c echo.Context) error {
 	if c.Request().Header.Get("Content-Type") != "application/json" {
 		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
 	}
@@ -81,8 +83,8 @@ func UpdatePatient(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message":        "Patient updated successfully",
-		"rows_affected":  rowsAffected,
+		"message":       "Patient updated successfully",
+		"rows_affected": rowsAffected,
 	})
 }
 
