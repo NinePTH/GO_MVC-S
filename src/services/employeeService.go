@@ -31,7 +31,7 @@ func AddEmployee(data map[string]interface{}) (int64, error) {
 	return rowsAffected, nil
 }
 
-func GetEmployee(employeeID string) (*models.Employee, error) {
+func GetEmployee(employeeID string) (*models.EmployeeResponse, error) {
 	fields := []string{
 		"Employee.employee_id",
 		"Employee.first_name",
@@ -45,7 +45,7 @@ func GetEmployee(employeeID string) (*models.Employee, error) {
 		"Employee.resignation_date",
 		"Employee.work_status",
 	}
-	// กำหนด joinTables แบบ full JOIN statement
+	// กำหนด joinTables แบบ JOIN statement
 	joinTables := "Position ON employee.position_id = position.position_id JOIN Department ON position.department_id = department.department_id"
 
 	// WHERE clause + arguments
@@ -91,7 +91,7 @@ func GetEmployee(employeeID string) (*models.Employee, error) {
 	workStatus := string(row["work_status"].([]byte))
 	hireDate := row["hire_date"].(time.Time).Format("2006-01-02")
 
-	employee := &models.Employee{
+	employee := &models.EmployeeResponse{
 		Employee_id:      fmt.Sprintf("%v", row["employee_id"]),
 		First_name:       fmt.Sprintf("%v", row["first_name"]),
 		Last_name:        fmt.Sprintf("%v", row["last_name"]),
@@ -108,7 +108,7 @@ func GetEmployee(employeeID string) (*models.Employee, error) {
 	return employee, nil
 }
 
-func GetAllEmployee() ([]models.Employee, error) {
+func GetAllEmployee() ([]models.EmployeeResponse, error) {
 	selectedColumns := []string{
 		"Employee.employee_id",
 		"Employee.first_name",
@@ -140,7 +140,7 @@ func GetAllEmployee() ([]models.Employee, error) {
 		return nil, err
 	}
 
-	var employees []models.Employee
+	var employees []models.EmployeeResponse
 
 	for _, row := range results {
 		// จัดการกับ resignation_date ที่อาจเป็น NULL
@@ -173,7 +173,7 @@ func GetAllEmployee() ([]models.Employee, error) {
 		hireDate := row["hire_date"].(time.Time).Format("2006-01-02")
 
 		// สร้าง struct ของ Employee
-		employee := models.Employee{
+		employee := models.EmployeeResponse{
 			Employee_id:      fmt.Sprintf("%v", row["employee_id"]),
 			First_name:       fmt.Sprintf("%v", row["first_name"]),
 			Last_name:        fmt.Sprintf("%v", row["last_name"]),

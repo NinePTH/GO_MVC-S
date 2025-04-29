@@ -12,5 +12,5 @@ func EmployeeRoutes(e *echo.Echo) {
 	protected.GET("", controllers.GetAllEmployee)                // Display all employee info
 	protected.GET("/:id", controllers.GetEmployee)               //Display employee info by id
 	protected.POST("/add-employee", controllers.AddEmployee)     //Add employee info
-	protected.PUT("/update-patient", controllers.UpdateEmployee) //Update Employee info
+	protected.PUT("/update-employee", controllers.UpdateEmployee) //Update Employee info
 }
