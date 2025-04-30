@@ -12,6 +12,30 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func SearchPatient(c echo.Context) error {
+	if c.Request().Header.Get("Content-Type") != "application/json" {
+		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+	}
+
+	body, _ := io.ReadAll(c.Request().Body)
+	fmt.Println("Raw Request Body:", string(body))
+	c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // reset body for Bind()
+
+	var req patients.SearchPatient
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request body")
+	}
+
+	patients, err := services.GetPatientSearch(req.Patient_id,req.First_name,req.Last_name)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, patients)
+}
+
+
+
 func AddPatientAppointment(c echo.Context) error {
 	if c.Request().Header.Get("Content-Type") != "application/json" {
 		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
@@ -77,6 +101,11 @@ func UpdatePatient(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Invalid request body")
 	}
 
+	//Age must not be negative
+	if req.Patient.Age < 0 { 
+		return c.JSON(http.StatusBadRequest, "Invalid Age Value")
+	}
+
 	rowsAffected, err := services.UpdatePatient(&req)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -127,6 +156,11 @@ func AddPatient(c echo.Context) error {
 	p := req.Patient
 	if p.Patient_id == "" || p.First_name == "" || p.Last_name == "" || p.Age == 0 || p.Gender == "" || p.Date_of_birth == "" || p.Blood_type == "" || p.Email == "" || p.Address == "" || p.Phone_number == "" || p.Id_card_number == "" || p.Ongoing_treatment == "" || p.Unhealthy_habits == "" {
 		return c.JSON(http.StatusBadRequest, "All patient fields must be provided")
+	}
+
+	//Age must not be negative
+	if req.Patient.Age < 0 { 
+		return c.JSON(http.StatusBadRequest, "Invalid Age Value")
 	}
 
 	err := services.AddPatient(req)

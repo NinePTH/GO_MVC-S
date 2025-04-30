@@ -9,6 +9,142 @@ import (
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 )
 
+func GetPatientSearch(id string,first_name string,last_name string) ([]patients.GetPatientResponse, error) {
+	table := "Patient"
+	fields := []string{"*"}
+
+	results, err := SelectData(table, fields, true, "($1 = '' OR patient_id = $1) AND ($2 = '' OR first_name ILIKE '%' || $2 || '%') AND ($3 = '' OR last_name ILIKE '%' || $3 || '%')", []interface{}{id,first_name,last_name}, false, "", "", "ORDER BY patient_id DESC")
+
+	if err != nil {
+		return nil, err
+	}
+
+	var patientResponses []patients.GetPatientResponse
+
+	for _, row := range results {
+		patient_id := row["patient_id"].(string)
+		patient := patients.GeneralPatientInformation{
+			Patient_id:        patient_id,
+			First_name:        row["first_name"].(string),
+			Last_name:         row["last_name"].(string),
+			Age:               int(row["age"].(int64)),
+			Date_of_birth:     row["date_of_birth"].(time.Time).Format("02-01-2006"),
+			Gender:            string(row["gender"].([]uint8)),
+			Blood_type:        string(row["blood_type"].([]uint8)),
+			Email:             row["email"].(string),
+			Health_insurance:  string(row["health_insurance"].([]uint8)),
+			Address:           row["address"].(string),
+			Phone_number:      row["phone_number"].(string),
+			Id_card_number:    row["id_card_number"].(string),
+			Ongoing_treatment: row["ongoing_treatment"].(string),
+			Unhealthy_habits:  row["unhealthy_habits"].(string),
+		}
+
+		// Medical History
+		table = "Medical_history"
+		fields = []string{"*"}
+		whereCondition := "patient_id = $1"
+		args := []interface{}{patient_id}
+		medicalResults, err := SelectData(table, fields, true, whereCondition, args, false, "", "", "")
+		if err != nil {
+			return nil, err
+		}
+		var medical_history []patients.MedicalHistory
+		for _, row := range medicalResults {
+			details := row["detail"].(string)
+			date := row["date"].(time.Time).Format("02-01-2006")
+			time := row["time"].(time.Time).Format("15:04:05")
+
+			medical_history = append(medical_history, patients.MedicalHistory{
+				Details: details,
+				Date:    date,
+				Time:    time,
+			})
+		}
+
+		// Chronic diseases (With JOIN)
+		table = "patient_chronic_disease"
+		jointables := "disease ON patient_chronic_disease.disease_id = disease.disease_id"
+		fields = []string{"disease_name"}
+		whereCondition = "patient_id = $1"
+		args = []interface{}{patient_id}
+		chronicResults, err := SelectData(table, fields, true, whereCondition, args, true, jointables, "", "")
+		if err != nil {
+			return nil, err
+		}
+		var chronicDiseases []patients.ChronicDiseaseName
+		for _, row := range chronicResults {
+			chronicDiseases = append(chronicDiseases, patients.ChronicDiseaseName{
+				DiseaseID: row["disease_name"].(string),
+			})
+		}
+
+		// Drug allergies
+		table = "patient_drug_allergy"
+		jointables = "drug ON patient_drug_allergy.drug_id = drug.drug_id"
+		whereCondition = "patient_id = $1"
+		fields = []string{"drug_name"}
+		args = []interface{}{patient_id}
+		allergyResults, err := SelectData(table,
+			fields,
+			true,
+			whereCondition,
+			args,
+			true,
+			jointables,
+			"",
+			"")
+		if err != nil {
+			return nil, err
+		}
+		var drugAllergies []patients.DrugAllergyName
+		for _, row := range allergyResults {
+			drugAllergies = append(drugAllergies, patients.DrugAllergyName{
+				DrugID: row["drug_name"].(string),
+			})
+		}
+
+		// Patient_appointment (Select only 1 latest appointment)
+		table = "patient_appointment"
+		fields = []string{"*"}
+		args = []interface{}{patient_id}
+		allergyResults, err = SelectData(
+			table,
+			fields,
+			true,
+			"patient_id = $1",
+			args,
+			false,
+			"",
+			"",
+			"ORDER BY date DESC, time DESC LIMIT 1")
+
+		if err != nil {
+			return nil, err
+		}
+		var patient_appointment []patients.PatientAppointment
+		for _, row := range allergyResults {
+			patient_appointment = append(patient_appointment, patients.PatientAppointment{
+				Time:  row["time"].(time.Time).Format("15:04:05"),
+				Date:  row["date"].(time.Time).Format("02-01-2006"),
+				Topic: row["topic"].(string),
+			})
+		}
+
+		// รวมร่าง json response = patient_model + medical_history + Patient_appointment + patient_chronicdisease + patientdrug_allerygy
+		response := patients.GetPatientResponse{
+			PatientGeneralInfo:    patient,
+			PatientAppointment:    patient_appointment,
+			PatientMedicalHistory: medical_history,
+			PatientChronicDisease: chronicDiseases,
+			PatientDrugAllergy:    drugAllergies,
+		}
+		patientResponses = append(patientResponses, response)
+	}
+
+	return patientResponses, nil
+}
+
 func AddPatientAppointment(req patients.AddPatientAppointment) error {
 	// log ข้อมูลที่รับเข้ามา
 	fmt.Printf("Received AddPatientRequest: %+v\n", req)
@@ -79,7 +215,7 @@ func UpdatePatient(req *patients.AddPatientRequest) (int64, error) {
 
 	addIfNotEmpty("first_name", req.Patient.First_name)
 	addIfNotEmpty("last_name", req.Patient.Last_name)
-	//addIfNotEmpty("age", fmt.Sprintf("%v", req.Patient.Age))
+	addIfNotEmpty("health_insurance", req.Patient.Health_insurance)
 	addIfNotEmpty("date_of_birth", req.Patient.Date_of_birth)
 	addIfNotEmpty("gender", req.Patient.Gender)
 	addIfNotEmpty("blood_type", req.Patient.Blood_type)
@@ -89,12 +225,6 @@ func UpdatePatient(req *patients.AddPatientRequest) (int64, error) {
 	addIfNotEmpty("id_card_number", req.Patient.Id_card_number)
 	addIfNotEmpty("ongoing_treatment", req.Patient.Ongoing_treatment)
 	addIfNotEmpty("unhealthy_habits", req.Patient.Unhealthy_habits)
-
-	// health_insurance (boolean) ต้องใส่เสมอ
-	// data["health_insurance"] = req.Patient.Health_insurance
-	// if req.Patient.Health_insurance != false {
-	// 	data["health_insurance"] = req.Patient.Health_insurance
-	// }
 
 	// เช็กค่า 'age' ว่ามีการส่งมาหรือไม่
 	if req.Patient.Age != 0 { // ใช้ค่า default 0 เช็กว่ามีการส่งมาหรือไม่
@@ -140,67 +270,6 @@ func UpdatePatient(req *patients.AddPatientRequest) (int64, error) {
 
 	return totalRowsAffected, nil
 }
-
-// func AddPatient(req patients.AddPatientRequest) error {
-// 	// log ข้อมูลที่รับเข้ามา
-// 	fmt.Printf("Received AddPatientRequest: %+v\n", req)
-// 	p := req.Patient
-// 	patientMap := map[string]interface{}{
-// 		"patient_id":        p.Patient_id,
-// 		"first_name":        p.First_name,
-// 		"last_name":         p.Last_name,
-// 		"age":               p.Age,
-// 		"gender":            p.Gender,
-// 		"date_of_birth":     p.Date_of_birth,
-// 		"blood_type":        p.Blood_type,
-// 		"email":             p.Email,
-// 		"health_insurance":  p.Health_insurance,
-// 		"address":           p.Address,
-// 		"phone_number":      p.Phone_number,
-// 		"id_card_number":    p.Id_card_number,
-// 		"ongoing_treatment": p.Ongoing_treatment,
-// 		"unhealthy_habits":  p.Unhealthy_habits,
-// 	}
-
-// 	fmt.Printf("Inserting patient: %+v\n", patientMap)
-
-// 	// Insert to patient table
-// 	table := "patient"
-// 	_, err := InsertData(table, patientMap)
-// 	if err != nil {
-// 		return fmt.Errorf("insert patient failed: %w", err)
-// 	}
-
-// 	// Insert to chronic diseases table
-// 	for _, chronic := range req.PatientChronicDisease {
-// 		chronicMap := map[string]interface{}{
-// 			"patient_id": p.Patient_id,
-// 			"disease_id": chronic.DiseaseID,
-// 		}
-
-// 		fmt.Printf("Chronic disease loop: patient_id = %s, disease_id = %s\n", p.Patient_id, chronic.DiseaseID)
-
-// 		table = "patient_chronic_disease"
-// 		_, err := InsertData(table, chronicMap)
-// 		if err != nil {
-// 			return fmt.Errorf("insert chronic disease failed: %w", err)
-// 		}
-// 	}
-// 	// Insert to drug allergies table
-// 	for _, allergy := range req.PatientDrugAllergy {
-// 		allergyMap := map[string]interface{}{
-// 			"patient_id": p.Patient_id,
-// 			"drug_id":    allergy.DrugID,
-// 		}
-// 		fmt.Printf("Drug allergy loop: patient_id = %s, drug_id = %s\n", p.Patient_id, allergy.DrugID)
-// 		table = "patient_drug_allergy"
-// 		_, err := InsertData(table, allergyMap)
-// 		if err != nil {
-// 			return fmt.Errorf("insert drug allergy failed: %w", err)
-// 		}
-// 	}
-// 	return nil
-// }
 
 func AddPatient(req patients.AddPatientRequest) error {
 	fmt.Printf("Received AddPatientRequest: %+v\n", req)
@@ -264,7 +333,6 @@ for _, allergy := range req.PatientDrugAllergy {
 
 	return nil
 }
-
 
 func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	table := "Patient"

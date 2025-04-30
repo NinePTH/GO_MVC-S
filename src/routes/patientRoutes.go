@@ -16,5 +16,5 @@ func PatientRoutes(e *echo.Echo) {
 	protected.POST("/add-patient", controllers.AddPatient)                        // Add patient info
 	protected.POST("/add-patient-history", controllers.AddPatientHistory)         // Add patient history
 	protected.POST("/add-patient-appointment", controllers.AddPatientAppointment) // Add patient appointment
-	//protected.POST("/search-patient", controllers.SearchPatient) // Seacrh patient by id,firstname,lastname
+	protected.POST("/search-patient", controllers.SearchPatient) // Seacrh patient by id,firstname,lastname
 }

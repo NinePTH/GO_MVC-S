@@ -1,14 +1,39 @@
 package controllers
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/NinePTH/GO_MVC-S/src/models"
+	//"github.com/NinePTH/GO_MVC-S/src/models/patients"
 	"github.com/NinePTH/GO_MVC-S/src/services"
 
 	"github.com/labstack/echo/v4"
 )
+
+func SearchEmployee(c echo.Context) error {
+	if c.Request().Header.Get("Content-Type") != "application/json" {
+		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+	}
+
+	body, _ := io.ReadAll(c.Request().Body)
+	fmt.Println("Raw Request Body:", string(body))
+	c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // reset body for Bind()
+
+	var req models.SearchEmployee
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request body")
+	}
+
+	patients, err := services.GetEmployeeSearch(req.Employee_id, req.First_name, req.Last_name)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, patients)
+}
 
 func UpdateEmployee(c echo.Context) error {
 	// ตรวจสอบ Content-Type
@@ -26,7 +51,6 @@ func UpdateEmployee(c echo.Context) error {
 	if employee_id == "" {
 		return c.JSON(http.StatusBadRequest, "Missing Employee ID")
 	}
-
 	data := map[string]interface{}{}
 
 	// ใช้ฟังก์ชัน addIfNotEmpty เพื่อเพิ่มเฉพาะ field ที่มีค่า
@@ -69,10 +93,7 @@ func UpdateEmployee(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "Employee information updated successfully"})
 }
 
-
-
-
-func AddEmployee(c echo.Context) error {   // แยก model ตอนส่งกับรับกลับ ส่ง id รับ name
+func AddEmployee(c echo.Context) error { // แยก model ตอนส่งกับรับกลับ ส่ง id รับ name
 	// ตรวจสอบ Content-Type
 	if c.Request().Header.Get("Content-Type") != "application/json" {
 		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
@@ -96,7 +117,7 @@ func AddEmployee(c echo.Context) error {   // แยก model ตอนส่ง
 		"employee_id":      req.Employee_id,
 		"first_name":       req.First_name,
 		"last_name":        req.Last_name,
-		"position_id":    req.Position_id,
+		"position_id":      req.Position_id,
 		"phone_number":     req.Phone_number,
 		"salary":           req.Salary,
 		"email":            req.Email,
@@ -120,8 +141,6 @@ func AddEmployee(c echo.Context) error {   // แยก model ตอนส่ง
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Employee added successfully"})
 }
-
-
 
 func GetAllEmployee(c echo.Context) error {
 	employee, err := services.GetAllEmployee()

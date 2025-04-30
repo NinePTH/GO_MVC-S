@@ -13,4 +13,5 @@ func EmployeeRoutes(e *echo.Echo) {
 	protected.GET("/:id", controllers.GetEmployee)               //Display employee info by id
 	protected.POST("/add-employee", controllers.AddEmployee)     //Add employee info
 	protected.PUT("/update-employee", controllers.UpdateEmployee) //Update Employee info
+	protected.POST("/search-employee", controllers.SearchEmployee) // Seacrh employee by id,firstname,lastname
 }
