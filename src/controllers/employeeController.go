@@ -34,54 +34,66 @@ func SearchEmployee(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, patients)
 }
-
 func UpdateEmployee(c echo.Context) error {
-	// ตรวจสอบ Content-Type
 	if c.Request().Header.Get("Content-Type") != "application/json" {
 		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
 	}
 
-	var req models.EmployeeInsert
-	if err := c.Bind(&req); err != nil {
+	var raw map[string]interface{}
+	if err := c.Bind(&raw); err != nil {
 		fmt.Println("Error binding request:", err)
 		return c.JSON(http.StatusBadRequest, "Invalid request body")
 	}
 
-	employee_id := req.Employee_id
-	if employee_id == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Employee ID")
+	// ตรวจสอบว่า employee_id มี และเป็น string
+	employeeID, ok := raw["employee_id"].(string)
+	if !ok || employeeID == "" {
+		return c.JSON(http.StatusBadRequest, "Missing or invalid employee_id")
 	}
+
 	data := map[string]interface{}{}
 
-	// ใช้ฟังก์ชัน addIfNotEmpty เพื่อเพิ่มเฉพาะ field ที่มีค่า
-	addIfNotEmpty := func(key string, value interface{}) {
-		switch v := value.(type) {
-		case string:
-			if v != "" {
-				data[key] = v
+	//ดัก undefined ทำให้รับได้แค่ string กับ float
+	addIfValidString := func(key string) {
+		if val, ok := raw[key]; ok {
+			str, ok := val.(string)
+			if !ok {
+				c.JSON(http.StatusBadRequest, fmt.Sprintf("%s must be a string", key))
+				return
 			}
-		case float64:
-			if v != 0 {
-				data[key] = v
+			if str != "" {
+				data[key] = str
+			}
+		}
+	}
+	addIfValidFloat := func(key string) {
+		if val, ok := raw[key]; ok {
+			num, ok := val.(float64)
+			if !ok {
+				c.JSON(http.StatusBadRequest, fmt.Sprintf("%s must be a number", key))
+				return
+			}
+			if num != 0 {
+				data[key] = num
 			}
 		}
 	}
 
-	addIfNotEmpty("first_name", req.First_name)
-	addIfNotEmpty("last_name", req.Last_name)
-	addIfNotEmpty("position_id", req.Position_id)
-	addIfNotEmpty("phone_number", req.Phone_number)
-	addIfNotEmpty("email", req.Email)
-	addIfNotEmpty("hire_date", req.Hire_date)
-	addIfNotEmpty("work_status", req.Work_status)
-	addIfNotEmpty("salary", req.Salary)
-	addIfNotEmpty("resignation_date", req.Resignation_date)
+	addIfValidString("first_name")
+	addIfValidString("last_name")
+	addIfValidString("position_id")
+	addIfValidString("phone_number")
+	addIfValidString("email")
+	addIfValidString("hire_date")
+	addIfValidString("work_status")
+	addIfValidString("resignation_date")
+	addIfValidFloat("salary")
 
 	if len(data) == 0 {
-		return c.JSON(http.StatusBadRequest, "No data to update")
+		return c.JSON(http.StatusBadRequest, "No valid data to update")
 	}
 
-	rowsAffected, err := services.UpdateEmployee(employee_id, data)
+	rowsAffected, err := services.UpdateEmployee(employeeID, data)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -92,6 +104,65 @@ func UpdateEmployee(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Employee information updated successfully"})
 }
+
+// func UpdateEmployee(c echo.Context) error {
+// 	// ตรวจสอบ Content-Type
+// 	if c.Request().Header.Get("Content-Type") != "application/json" {
+// 		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+// 	}
+
+// 	var req models.EmployeeInsert
+// 	if err := c.Bind(&req); err != nil {
+// 		fmt.Println("Error binding request:", err)
+// 		return c.JSON(http.StatusBadRequest, "Invalid request body")
+// 	}
+
+// 	employee_id := req.Employee_id
+// 	if employee_id == "" {
+// 		return c.JSON(http.StatusBadRequest, "Missing Employee ID")
+// 	}
+// 	data := map[string]interface{}{}
+
+// 	// ใช้ฟังก์ชัน addIfNotEmpty เพื่อเพิ่มเฉพาะ field ที่มีค่า
+// 	addIfNotEmpty := func(key string, value interface{}) {
+// 		switch v := value.(type) {
+// 		case string:
+// 			if v != "" {
+// 				data[key] = v
+// 			}
+// 		case float64:
+// 			if v != 0 {
+// 				data[key] = v
+// 			}
+// 		}
+// 	}
+
+// 	addIfNotEmpty("first_name", req.First_name)
+// 	addIfNotEmpty("last_name", req.Last_name)
+// 	addIfNotEmpty("position_id", req.Position_id)
+// 	addIfNotEmpty("phone_number", req.Phone_number)
+// 	addIfNotEmpty("email", req.Email)
+// 	addIfNotEmpty("hire_date", req.Hire_date)
+// 	addIfNotEmpty("work_status", req.Work_status)
+// 	addIfNotEmpty("salary", req.Salary)
+// 	addIfNotEmpty("resignation_date", req.Resignation_date)
+
+// 	if len(data) == 0 {
+// 		return c.JSON(http.StatusBadRequest, "No data to update")
+// 	}
+
+
+// 	rowsAffected, err := services.UpdateEmployee(employee_id, data)
+// 	if err != nil {
+// 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+// 	}
+
+// 	if rowsAffected == 0 {
+// 		return c.JSON(http.StatusOK, map[string]string{"message": "No rows affected"})
+// 	}
+
+// 	return c.JSON(http.StatusOK, map[string]string{"message": "Employee information updated successfully"})
+// }
 
 func AddEmployee(c echo.Context) error { // แยก model ตอนส่งกับรับกลับ ส่ง id รับ name
 	// ตรวจสอบ Content-Type

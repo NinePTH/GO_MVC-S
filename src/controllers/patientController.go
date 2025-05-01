@@ -26,15 +26,13 @@ func SearchPatient(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Invalid request body")
 	}
 
-	patients, err := services.GetPatientSearch(req.Patient_id,req.First_name,req.Last_name)
+	patients, err := services.GetPatientSearch(req.Patient_id, req.First_name, req.Last_name)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, patients)
 }
-
-
 
 func AddPatientAppointment(c echo.Context) error {
 	if c.Request().Header.Get("Content-Type") != "application/json" {
@@ -101,8 +99,71 @@ func UpdatePatient(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Invalid request body")
 	}
 
-	//Age must not be negative
-	if req.Patient.Age < 0 { 
+	// ดักว่าเป็น string มั้ย
+	validateString := func(fieldName string, value interface{}) error {
+		if _, ok := value.(string); !ok {
+			return fmt.Errorf("%s must be a string", fieldName)
+		}
+		return nil
+	}
+
+	// เช็คใน patient fields ว่าทุกค่าเป็น string หรือไม่
+	if err := validateString("patient.patient_id", req.Patient.Patient_id); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.first_name", req.Patient.First_name); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.last_name", req.Patient.Last_name); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.gender", req.Patient.Gender); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.date_of_birth", req.Patient.Date_of_birth); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.blood_type", req.Patient.Blood_type); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.email", req.Patient.Email); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.health_insurance", req.Patient.Health_insurance); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.address", req.Patient.Address); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.phone_number", req.Patient.Phone_number); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.id_card_number", req.Patient.Id_card_number); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.ongoing_treatment", req.Patient.Ongoing_treatment); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.unhealthy_habits", req.Patient.Unhealthy_habits); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	// เช็คใน patient_chronic_disease ว่าทุกค่าเป็น string หรือไม่
+	for i, chronic := range req.PatientChronicDisease {
+		if err := validateString(fmt.Sprintf("patient_chronic_disease[%d].disease_id", i), chronic.DiseaseID); err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	// เช็คใน patient_drug_allergy ว่าทุกค่าเป็น string หรือไม่
+	for i, allergy := range req.PatientDrugAllergy {
+		if err := validateString(fmt.Sprintf("patient_drug_allergy[%d].drug_id", i), allergy.DrugID); err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	// Age must not be negative
+	if req.Patient.Age < 0 {
 		return c.JSON(http.StatusBadRequest, "Invalid Age Value")
 	}
 
@@ -159,7 +220,7 @@ func AddPatient(c echo.Context) error {
 	}
 
 	//Age must not be negative
-	if req.Patient.Age < 0 { 
+	if req.Patient.Age < 0 {
 		return c.JSON(http.StatusBadRequest, "Invalid Age Value")
 	}
 
