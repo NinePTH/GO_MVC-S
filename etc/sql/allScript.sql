@@ -22,7 +22,7 @@ CREATE TABLE Patient (
     health_insurance status NOT NULL,
     address TEXT NOT NULL,
     phone_number VARCHAR(15) NOT NULL,
-    id_card_number VARCHAR(13) NOT NULL,
+    id_card_number UNIQUE VARCHAR(13) NOT NULL,
     ongoing_treatment VARCHAR(50) NOT NULL,
     unhealthy_habits VARCHAR(50) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL,
