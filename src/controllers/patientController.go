@@ -259,7 +259,7 @@ func AddPatient(c echo.Context) error {
 
 	// check all fields of patient must be filled
 	p := req.Patient
-	if p.Patient_id == "" || p.First_name == "" || p.Last_name == "" || p.Age == 0 || p.Gender == "" || p.Date_of_birth == "" || p.Blood_type == "" || p.Email == "" || p.Address == "" || p.Phone_number == "" || p.Id_card_number == "" || p.Ongoing_treatment == "" || p.Unhealthy_habits == "" {
+	if p.Patient_id == "" || p.First_name == "" || p.Last_name == "" || p.Age == 0 || p.Gender == "" || p.Date_of_birth == "" || p.Blood_type == "" || p.Email == "" || p.Address == "" || p.Phone_number == "" || p.Id_card_number == "" || p.Ongoing_treatment == "" || p.Health_insurance == "" || p.Unhealthy_habits == "" {
 		return c.JSON(http.StatusBadRequest, "All patient fields must be provided")
 	}
 
