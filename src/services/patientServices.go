@@ -2,12 +2,18 @@ package services
 
 import (
 	"fmt"
-	//"strings"
+	"strings"
+
 	//"strings"
 	"time"
 
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 )
+
+func isValidString(s string) bool {
+	s = strings.TrimSpace(s)
+	return s != "" && strings.ToLower(s) != "undefined" && strings.ToLower(s) != "null"
+}
 
 func GetPatientSearch(id string, first_name string, last_name string) ([]patients.GetPatientResponse, error) {
 	table := "Patient"
@@ -268,27 +274,27 @@ func UpdatePatient(req *patients.AddPatientRequest) (int64, error) {
 		}
 	}
 
-    // ============ Drug allergy ============
-    if len(req.PatientDrugAllergy) > 0 {
-	table := "patient_drug_allergy"
-	// ลบของเก่า
-	if err := DeleteByPatientID(table, patientID); err != nil {
-		return totalRowsAffected, fmt.Errorf("failed to delete drug allergy: %v", err)
-	}
+	// ============ Drug allergy ============
+	if len(req.PatientDrugAllergy) > 0 {
+		table := "patient_drug_allergy"
+		// ลบของเก่า
+		if err := DeleteByPatientID(table, patientID); err != nil {
+			return totalRowsAffected, fmt.Errorf("failed to delete drug allergy: %v", err)
+		}
 
-	// Insert ใหม่
-	for _, drug := range req.PatientDrugAllergy {
-		drugMap := map[string]interface{}{
-			"patient_id": patientID,
-			"drug_id": drug.DrugID,
+		// Insert ใหม่
+		for _, drug := range req.PatientDrugAllergy {
+			drugMap := map[string]interface{}{
+				"patient_id": patientID,
+				"drug_id":    drug.DrugID,
+			}
+			_, err := InsertData(table, drugMap)
+			if err != nil {
+				return totalRowsAffected, fmt.Errorf("insert drug allergy failed: %v", err)
+			}
+			totalRowsAffected++ // นับเพิ่มทีละ insert
 		}
-		_, err := InsertData(table, drugMap)
-		if err != nil {
-			return totalRowsAffected, fmt.Errorf("insert drug allergy failed: %v", err)
-		}
-		totalRowsAffected++ // นับเพิ่มทีละ insert
 	}
-}
 	return totalRowsAffected, nil
 }
 
@@ -324,8 +330,8 @@ func AddPatient(req patients.AddPatientRequest) error {
 
 	// Insert to chronic diseases table
 	for _, chronic := range req.PatientChronicDisease {
-		if chronic.DiseaseID == "" || chronic.DiseaseID == "undefined" {
-			continue // ข้ามถ้า disease_id ว่าง
+		if !isValidString(chronic.DiseaseID) {
+			continue // ข้ามถ้า disease_id ว่าง, undefined, หรือ null
 		}
 		chronicMap := map[string]interface{}{
 			"patient_id": p.Patient_id,
@@ -339,8 +345,8 @@ func AddPatient(req patients.AddPatientRequest) error {
 
 	// Insert to drug allergies table
 	for _, allergy := range req.PatientDrugAllergy {
-		if allergy.DrugID == "" || allergy.DrugID == "undefined" {
-			continue // ข้ามถ้า drug_id ว่าง
+		if !isValidString(allergy.DrugID) {
+			continue // ข้ามถ้า disease_id ว่าง, undefined, หรือ null
 		}
 		allergyMap := map[string]interface{}{
 			"patient_id": p.Patient_id,
