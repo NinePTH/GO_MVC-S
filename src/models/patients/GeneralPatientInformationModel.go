@@ -10,7 +10,7 @@ type GeneralPatientInformation struct {
 	Date_of_birth string `json:"date_of_birth"`
 	Blood_type  string `json:"blood_type"`
 	Email string `json:"email"`
-	Health_insurance bool `json:"health_insurance"`
+	Health_insurance string `json:"health_insurance"`
 	Address string `json:"address"`
 	Phone_number string `json:"phone_number"`
 	Id_card_number string `json:"id_card_number"`

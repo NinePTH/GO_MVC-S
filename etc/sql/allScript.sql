@@ -8,6 +8,7 @@ CREATE TABLE Users (
 
 CREATE TYPE blood_group AS ENUM ('A', 'B', 'AB', 'O');
 CREATE TYPE sex AS ENUM ('male', 'female');
+CREATE TYPE status AS ENUM ('yes','no');
 CREATE TABLE Patient (
     patient_id VARCHAR(4) PRIMARY KEY,
     user_id INT UNIQUE,
@@ -18,10 +19,10 @@ CREATE TABLE Patient (
     gender sex NOT NULL,
     blood_type blood_group NOT NULL,
     email VARCHAR(50) UNIQUE NOT NULL,
-    health_insurance BOOLEAN NOT NULL,
+    health_insurance status NOT NULL,
     address TEXT NOT NULL,
     phone_number VARCHAR(15) NOT NULL,
-    id_card_number VARCHAR(13) NOT NULL,
+    id_card_number UNIQUE VARCHAR(13) NOT NULL,
     ongoing_treatment VARCHAR(50) NOT NULL,
     unhealthy_habits VARCHAR(50) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL,
@@ -35,7 +36,7 @@ CREATE TABLE Medical_history (
 	detail TEXT NOT NULL,
 	time TIME NOT NULL,
 	date date NOT NULL,
-	FOREIGN KEY (patient_id) REFERENCES Patient(patient_id)
+	FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE
 );
 
 INSERT INTO Users (username, password, role)
@@ -51,13 +52,13 @@ INSERT INTO Patient (
 )
 VALUES
 ( 'P001', 'John', 'Doe', 30, '1994-05-15', 'male', 'A', 
- 'john.doe@example.com', TRUE, '123 Main St, Cityville', 
+ 'john.doe@example.com', 'yes', '123 Main St, Cityville', 
  '0123456789', '1234567890123', 'Hypertension','Drunk'),
 ( 'P002', 'Jane', 'Smith', 45, '1979-11-22', 'female', 'B',
- 'jane.smith@example.com', FALSE, '456 Oak Ave, Townsville', 
+ 'jane.smith@example.com', 'yes', '456 Oak Ave, Townsville', 
  '0987654321', '3210987654321', 'Diabetes','Drunk'),
 ( 'P003', 'Mary', 'Johnson', 25, '1999-08-10', 'female', 'O',
- 'mary.johnson@example.com', TRUE, '789 Pine Rd, Villagetown', 
+ 'mary.johnson@example.com', 'no', '789 Pine Rd, Villagetown', 
  '0876543210', '6543210987654', 'Healthy','None');
 
  INSERT INTO Medical_history (patient_id, detail, time, date)
@@ -103,7 +104,7 @@ INSERT INTO Position Values
 ('P010','D010','Doctor'),
 ('P011', 'D011', 'HR');
 
-CREATE TYPE status AS ENUM ('yes','no');
+
 
 CREATE TABLE Employee(
     employee_id VARCHAR(4) PRIMARY KEY,

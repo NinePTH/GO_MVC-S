@@ -7,7 +7,7 @@ import (
 )
 
 // select distinct,etc.
-func SelectData(table string, fields []string, where bool, whereCon string, whereArgs []interface{}, join bool, joinTable string, joinCondition string) ([]map[string]interface{}, error) {
+func SelectData(table string, fields []string, where bool, whereCon string, whereArgs []interface{}, join bool, joinTable string, joinCondition string,orderAndLimit string) ([]map[string]interface{}, error) {
 	var query string = "SELECT "
 
 	// Add fields to SELECT
@@ -22,9 +22,9 @@ func SelectData(table string, fields []string, where bool, whereCon string, wher
 	// If join is enabled
 	if join {
 		if joinCondition != "" {
-			query += " INNER JOIN " + joinTable + " ON " + joinCondition
+			query += " JOIN " + joinTable + " ON " + joinCondition
 		} else {
-			query += " INNER JOIN " + joinTable
+			query += " JOIN " + joinTable
 		}
 	}
 
@@ -32,6 +32,12 @@ func SelectData(table string, fields []string, where bool, whereCon string, wher
 	if where {
 		query += " WHERE " + whereCon
 	}
+
+
+	// Add ORDER BY and LIMIT if provided
+	if orderAndLimit != "" {
+		query += " " + orderAndLimit
+	} 
 
 	// Log the query
 	fmt.Println("Executing query:", query)

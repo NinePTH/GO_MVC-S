@@ -1,3 +1,4 @@
+// limit
 package controllers
 
 import (
@@ -5,11 +6,35 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
 	"github.com/NinePTH/GO_MVC-S/src/models/patients"
 	"github.com/NinePTH/GO_MVC-S/src/services"
 	"github.com/labstack/echo/v4"
 )
-func UpdatePatient(c echo.Context) error {
+
+func SearchPatient(c echo.Context) error {
+	if c.Request().Header.Get("Content-Type") != "application/json" {
+		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+	}
+
+	body, _ := io.ReadAll(c.Request().Body)
+	fmt.Println("Raw Request Body:", string(body))
+	c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // reset body for Bind()
+
+	var req patients.SearchPatient
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request body")
+	}
+
+	patients, err := services.GetPatientSearch(req.Patient_id, req.First_name, req.Last_name)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, patients)
+}
+
+func AddPatientAppointment(c echo.Context) error {
 	if c.Request().Header.Get("Content-Type") != "application/json" {
 		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
 	}
@@ -18,96 +43,183 @@ func UpdatePatient(c echo.Context) error {
 	fmt.Println("Raw Request Body:", string(body))
 	c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body for Bind()
 
-	var req patients.AddPatientRequest
+	var req patients.AddPatientAppointment
 
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid request body")
 	}
 
-	patient_id := req.Patient.Patient_id // ใช้ patient_id จาก body ที่ส่งมา
-	if patient_id == "" {
-		return c.JSON(http.StatusBadRequest, "Missing patient_id")
+	// check all fields of patient must be filled
+	if req.Patient_id == "" || req.Topic == "" || req.Time == "" || req.Date == "" {
+		return c.JSON(http.StatusBadRequest, "All patient fields must be provided")
 	}
 
-	data := map[string]interface{}{}
-	addIfNotEmpty := func(key, value string) {
-		if value != "" {
-			data[key] = value
+	// ดักว่าเป็น string มั้ย
+	validateString := func(fieldName string, value interface{}) error {
+		if _, ok := value.(string); !ok {
+			return fmt.Errorf("%s must be a string", fieldName)
+		}
+		return nil
+	}
+
+	// เช็คใน patient fields ว่าทุกค่าเป็น string หรือไม่
+	if err := validateString("patient.patient_id", req.Patient_id); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.topic", req.Topic); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.time", req.Time); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.date", req.Date); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	err := services.AddPatientAppointment(req)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "Patient appointment added successfully")
+}
+
+func AddPatientHistory(c echo.Context) error {
+	if c.Request().Header.Get("Content-Type") != "application/json" {
+		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+	}
+	// Log raw request body
+	body, _ := io.ReadAll(c.Request().Body)
+	fmt.Println("Raw Request Body:", string(body))
+	c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body for Bind()
+
+	var req patients.AddPatientHistory
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request body")
+	}
+
+	// check all fields of patient must be filled
+	if req.Patient_id == "" || req.Detail == "" || req.Time == "" || req.Date == "" {
+		return c.JSON(http.StatusBadRequest, "All patient fields must be provided")
+	}
+
+	// ดักว่าเป็น string มั้ย
+	validateString := func(fieldName string, value interface{}) error {
+		if _, ok := value.(string); !ok {
+			return fmt.Errorf("%s must be a string", fieldName)
+		}
+		return nil
+	}
+
+	// เช็คใน patient fields ว่าทุกค่าเป็น string หรือไม่
+	if err := validateString("patient.patient_id", req.Patient_id); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.detail", req.Detail); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.time", req.Time); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.date", req.Date); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	err := services.AddPatientHistory(req)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "Patient history added successfully")
+}
+
+func UpdatePatient(c echo.Context) error {
+	if c.Request().Header.Get("Content-Type") != "application/json" {
+		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+	}
+
+	var req patients.AddPatientRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request body")
+	}
+
+	// ดักว่าเป็น string มั้ย
+	validateString := func(fieldName string, value interface{}) error {
+		if _, ok := value.(string); !ok {
+			return fmt.Errorf("%s must be a string", fieldName)
+		}
+		return nil
+	}
+
+	// เช็คใน patient fields ว่าทุกค่าเป็น string หรือไม่
+	if err := validateString("patient.patient_id", req.Patient.Patient_id); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.first_name", req.Patient.First_name); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.last_name", req.Patient.Last_name); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.gender", req.Patient.Gender); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.date_of_birth", req.Patient.Date_of_birth); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.blood_type", req.Patient.Blood_type); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.email", req.Patient.Email); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.health_insurance", req.Patient.Health_insurance); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.address", req.Patient.Address); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.phone_number", req.Patient.Phone_number); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.id_card_number", req.Patient.Id_card_number); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.ongoing_treatment", req.Patient.Ongoing_treatment); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.unhealthy_habits", req.Patient.Unhealthy_habits); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	// เช็คใน patient_chronic_disease ว่าทุกค่าเป็น string หรือไม่
+	for i, chronic := range req.PatientChronicDisease {
+		if err := validateString(fmt.Sprintf("patient_chronic_disease[%d].disease_id", i), chronic.DiseaseID); err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 	}
 
-	// เพิ่มข้อมูลที่ไม่ว่างใน data
-	addIfNotEmpty("first_name", req.Patient.First_name)
-	addIfNotEmpty("last_name", req.Patient.Last_name)
-	addIfNotEmpty("age", fmt.Sprintf("%v", req.Patient.Age)) // แปลง age เป็น string (รับเป็น null)
-	addIfNotEmpty("date_of_birth", req.Patient.Date_of_birth)
-	addIfNotEmpty("gender", req.Patient.Gender)
-	addIfNotEmpty("blood_type", req.Patient.Blood_type)
-	addIfNotEmpty("email", req.Patient.Email)
-	addIfNotEmpty("address", req.Patient.Address)
-	addIfNotEmpty("phone_number", req.Patient.Phone_number)
-	addIfNotEmpty("id_card_number", req.Patient.Id_card_number)
-	addIfNotEmpty("ongoing_treatment", req.Patient.Ongoing_treatment)
-	addIfNotEmpty("unhealthy_habits", req.Patient.Unhealthy_habits)
-
-	// Handle health_insurance (boolean)
-	data["health_insurance"] = req.Patient.Health_insurance
-	
-
-	// Update patient info
-	if len(data) > 0 {
-		rowsAffected, err := services.UpdatePatient(patient_id, data)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, err.Error())
-		}
-		fmt.Printf("Patient info updated: %d rows affected\n", rowsAffected)
-	}
-
-	// ============ Chronic Diseases ============ (ถ้าส่งเปล่า->ไม่เกิดอะไรขึ้น เก็บค่าเดิม) (ถ้าส่งค่าจะ rewrite ค่าเก่า)
-	// ถ้ามีการใส่ค่าเข้า arrray PatientChronicDisease
-	if len(req.PatientChronicDisease) > 0 {
-		// ลบ ค่าใน table patient_chronic_disease เก่าที่มีอยู่
-		table := "patient_chronic_disease"
-		if err := services.DeleteByPatientID(table, patient_id); err != nil {
-			return c.JSON(http.StatusInternalServerError, "Failed to delete chronic diseases")
-		}
-
-		// เพิ่ม chronic diseases ใหม่
-		for _, chronic := range req.PatientChronicDisease {
-			chronicMap := map[string]interface{}{
-				"patient_id": patient_id,
-				"disease_id": chronic.DiseaseID,
-			}
-			_, err := services.InsertData("patient_chronic_disease", chronicMap)
-			if err != nil {
-				return c.JSON(http.StatusInternalServerError, fmt.Sprintf("Insert chronic disease failed: %v", err))
-			}
+	// เช็คใน patient_drug_allergy ว่าทุกค่าเป็น string หรือไม่
+	for i, allergy := range req.PatientDrugAllergy {
+		if err := validateString(fmt.Sprintf("patient_drug_allergy[%d].drug_id", i), allergy.DrugID); err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 	}
 
-	// ============ Drug Allergies ============ (ถ้าส่งเปล่า->ไม่เกิดอะไรขึ้น เก็บค่าเดิม) (ถ้าส่งค่าจะ rewrite ค่าเก่า)
-	// ถ้ามีการใส่ค่าเข้า arrray PatientChronicDisease
-	if len(req.PatientDrugAllergy) > 0 {
-		// ลบ ค่าใน table patient_drug_allergy drug allergies เก่าที่มีอยู่
-		table := "patient_drug_allergy"
-		if err := services.DeleteByPatientID(table, patient_id); err != nil {
-			return c.JSON(http.StatusInternalServerError, "Failed to delete drug allergies")
-		}
-
-		// เพิ่ม drug allergies ใหม่
-		for _, allergy := range req.PatientDrugAllergy {
-			allergyMap := map[string]interface{}{
-				"patient_id": patient_id,
-				"drug_id":    allergy.DrugID,
-			}
-			_, err := services.InsertData("patient_drug_allergy", allergyMap)
-			if err != nil {
-				return c.JSON(http.StatusInternalServerError, fmt.Sprintf("Insert drug allergy failed: %v", err))
-			}
-		}
+	// Age must not be negative
+	if req.Patient.Age < 0 {
+		return c.JSON(http.StatusBadRequest, "Invalid Age Value")
 	}
 
-	return c.JSON(http.StatusOK, "Patient updated successfully")
+	rowsAffected, err := services.UpdatePatient(&req)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message":       "Patient updated successfully",
+		"rows_affected": rowsAffected,
+	})
 }
 
 func GetPatient(c echo.Context) error {
@@ -147,8 +259,76 @@ func AddPatient(c echo.Context) error {
 
 	// check all fields of patient must be filled
 	p := req.Patient
-	if p.Patient_id == "" || p.First_name == "" || p.Last_name == "" || p.Age == 0 || p.Gender == "" || p.Date_of_birth == "" || p.Blood_type == "" || p.Email == "" || p.Address == "" || p.Phone_number == "" || p.Id_card_number == "" || p.Ongoing_treatment == "" || p.Unhealthy_habits == "" {
+	if p.Patient_id == "" || p.First_name == "" || p.Last_name == "" || p.Age == 0 || p.Gender == "" || p.Date_of_birth == "" || p.Blood_type == "" || p.Email == "" || p.Address == "" || p.Phone_number == "" || p.Id_card_number == "" || p.Ongoing_treatment == "" || p.Health_insurance == "" || p.Unhealthy_habits == "" {
 		return c.JSON(http.StatusBadRequest, "All patient fields must be provided")
+	}
+
+	// ดักว่าเป็น string มั้ย
+	validateString := func(fieldName string, value interface{}) error {
+		if _, ok := value.(string); !ok {
+			return fmt.Errorf("%s must be a string", fieldName)
+		}
+		return nil
+	}
+
+	// เช็คใน patient fields ว่าทุกค่าเป็น string หรือไม่
+	if err := validateString("patient.patient_id", req.Patient.Patient_id); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.first_name", req.Patient.First_name); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.last_name", req.Patient.Last_name); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.gender", req.Patient.Gender); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.date_of_birth", req.Patient.Date_of_birth); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.blood_type", req.Patient.Blood_type); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.email", req.Patient.Email); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.health_insurance", req.Patient.Health_insurance); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.address", req.Patient.Address); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.phone_number", req.Patient.Phone_number); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.id_card_number", req.Patient.Id_card_number); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.ongoing_treatment", req.Patient.Ongoing_treatment); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := validateString("patient.unhealthy_habits", req.Patient.Unhealthy_habits); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	// เช็คใน patient_chronic_disease ว่าทุกค่าเป็น string หรือไม่
+	for i, chronic := range req.PatientChronicDisease {
+		if err := validateString(fmt.Sprintf("patient_chronic_disease[%d].disease_id", i), chronic.DiseaseID); err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	// เช็คใน patient_drug_allergy ว่าทุกค่าเป็น string หรือไม่
+	for i, allergy := range req.PatientDrugAllergy {
+		if err := validateString(fmt.Sprintf("patient_drug_allergy[%d].drug_id", i), allergy.DrugID); err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	// Age must not be negative
+	if req.Patient.Age < 0 {
+		return c.JSON(http.StatusBadRequest, "Invalid Age Value")
 	}
 
 	err := services.AddPatient(req)

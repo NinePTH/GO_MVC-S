@@ -1,120 +1,204 @@
 package controllers
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"net/http"
 
+	"github.com/NinePTH/GO_MVC-S/src/models"
+	//"github.com/NinePTH/GO_MVC-S/src/models/patients"
 	"github.com/NinePTH/GO_MVC-S/src/services"
 
 	"github.com/labstack/echo/v4"
 )
 
+func SearchEmployee(c echo.Context) error {
+	if c.Request().Header.Get("Content-Type") != "application/json" {
+		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+	}
+
+	body, _ := io.ReadAll(c.Request().Body)
+	fmt.Println("Raw Request Body:", string(body))
+	c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // reset body for Bind()
+
+	var req models.SearchEmployee
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request body")
+	}
+
+	patients, err := services.GetEmployeeSearch(req.Employee_id, req.First_name, req.Last_name)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, patients)
+}
 func UpdateEmployee(c echo.Context) error {
-	employee_id := c.QueryParam("employee_id")
-	if employee_id == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Employee ID")
+	if c.Request().Header.Get("Content-Type") != "application/json" {
+		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+	}
+
+	var raw map[string]interface{}
+	if err := c.Bind(&raw); err != nil {
+		fmt.Println("Error binding request:", err)
+		return c.JSON(http.StatusBadRequest, "Invalid request body")
+	}
+
+	// ตรวจสอบว่า employee_id มี และเป็น string
+	employeeID, ok := raw["employee_id"].(string)
+	if !ok || employeeID == "" {
+		return c.JSON(http.StatusBadRequest, "Missing or invalid employee_id")
 	}
 
 	data := map[string]interface{}{}
 
-	// ใช้ helper function เพื่อเช็คและเพิ่มค่าเข้า map เฉพาะที่ไม่ว่าง (ทำให้สามารถ update แค่บางค่าได้)
-	addIfNotEmpty := func(key, value string) {
-		if value != "" {
-			data[key] = value
+	//ดัก undefined ทำให้รับได้แค่ string กับ float
+	addIfValidString := func(key string) {
+		if val, ok := raw[key]; ok {
+			str, ok := val.(string)
+			if !ok {
+				c.JSON(http.StatusBadRequest, fmt.Sprintf("%s must be a string", key))
+				return
+			}
+			if str != "" {
+				data[key] = str
+			}
+		}
+	}
+	addIfValidFloat := func(key string) {
+		if val, ok := raw[key]; ok {
+			num, ok := val.(float64)
+			if !ok {
+				c.JSON(http.StatusBadRequest, fmt.Sprintf("%s must be a number", key))
+				return
+			}
+			if num != 0 {
+				data[key] = num
+			}
 		}
 	}
 
-	addIfNotEmpty("first_name", c.QueryParam("first_name"))
-	addIfNotEmpty("last_name", c.QueryParam("last_name"))
-	addIfNotEmpty("position_id", c.QueryParam("position_id"))
-	addIfNotEmpty("phone_number", c.QueryParam("phone_number"))
-	addIfNotEmpty("department_id", c.QueryParam("department_id"))
-	addIfNotEmpty("salary", c.QueryParam("salary"))
-	addIfNotEmpty("email", c.QueryParam("email"))
-	addIfNotEmpty("hire_date", c.QueryParam("hire_date"))
-	addIfNotEmpty("resignation_date", c.QueryParam("resignation_date"))
-	addIfNotEmpty("work_status", c.QueryParam("work_status"))
+	addIfValidString("first_name")
+	addIfValidString("last_name")
+	addIfValidString("position_id")
+	addIfValidString("phone_number")
+	addIfValidString("email")
+	addIfValidString("hire_date")
+	addIfValidString("work_status")
+	addIfValidString("resignation_date")
+	addIfValidFloat("salary")
 
-	// ถ้าไม่มี field อะไรเลยใน data ให้คืนว่าไม่มีอะไรอัปเดต
 	if len(data) == 0 {
-		return c.JSON(http.StatusBadRequest, "No data to update")
+		return c.JSON(http.StatusBadRequest, "No valid data to update")
 	}
 
-	rowsAffected, err := services.UpdateEmployee(employee_id, data)
+	rowsAffected, err := services.UpdateEmployee(employeeID, data)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
 	if rowsAffected == 0 {
-		return c.JSON(http.StatusOK, "No rows affected")
+		return c.JSON(http.StatusOK, map[string]string{"message": "No rows affected"})
 	}
 
-	return c.JSON(http.StatusOK, "Employee information updated successfully")
+	return c.JSON(http.StatusOK, map[string]string{"message": "Employee information updated successfully"})
 }
 
-func AddEmployee(c echo.Context) error {
-	employee_id := c.QueryParam("employee_id")
-	if employee_id == "" {
-		return c.JSON(http.StatusBadRequest, "Missing employee ID")
-	}
-	
-	first_name := c.QueryParam("first_name")
-	last_name := c.QueryParam("last_name")
-	position_id := c.QueryParam("position_id")
-	phone_number := c.QueryParam("phone_number")
-	department_id := c.QueryParam("department_id")
-	salary := c.QueryParam("salary")
-	email := c.QueryParam("email")
-	hire_date := c.QueryParam("hire_date")
-	resignation_date := c.QueryParam("resignation_date")
-	var resignationDate interface{}
-	if resignation_date == "" {
-		resignationDate = nil
-	} else {
-		resignationDate = resignation_date
-	}
-	work_status := c.QueryParam("work_status")
+// func UpdateEmployee(c echo.Context) error {
+// 	// ตรวจสอบ Content-Type
+// 	if c.Request().Header.Get("Content-Type") != "application/json" {
+// 		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+// 	}
 
-	//ดัก null ทุกช่อง เพราะเพิ่มประวัติพนักงานต้องกรอกข้อมูลให้ครบ
-	if first_name == "" {
-		return c.JSON(http.StatusBadRequest, "Missing First Name")
+// 	var req models.EmployeeInsert
+// 	if err := c.Bind(&req); err != nil {
+// 		fmt.Println("Error binding request:", err)
+// 		return c.JSON(http.StatusBadRequest, "Invalid request body")
+// 	}
+
+// 	employee_id := req.Employee_id
+// 	if employee_id == "" {
+// 		return c.JSON(http.StatusBadRequest, "Missing Employee ID")
+// 	}
+// 	data := map[string]interface{}{}
+
+// 	// ใช้ฟังก์ชัน addIfNotEmpty เพื่อเพิ่มเฉพาะ field ที่มีค่า
+// 	addIfNotEmpty := func(key string, value interface{}) {
+// 		switch v := value.(type) {
+// 		case string:
+// 			if v != "" {
+// 				data[key] = v
+// 			}
+// 		case float64:
+// 			if v != 0 {
+// 				data[key] = v
+// 			}
+// 		}
+// 	}
+
+// 	addIfNotEmpty("first_name", req.First_name)
+// 	addIfNotEmpty("last_name", req.Last_name)
+// 	addIfNotEmpty("position_id", req.Position_id)
+// 	addIfNotEmpty("phone_number", req.Phone_number)
+// 	addIfNotEmpty("email", req.Email)
+// 	addIfNotEmpty("hire_date", req.Hire_date)
+// 	addIfNotEmpty("work_status", req.Work_status)
+// 	addIfNotEmpty("salary", req.Salary)
+// 	addIfNotEmpty("resignation_date", req.Resignation_date)
+
+// 	if len(data) == 0 {
+// 		return c.JSON(http.StatusBadRequest, "No data to update")
+// 	}
+
+
+// 	rowsAffected, err := services.UpdateEmployee(employee_id, data)
+// 	if err != nil {
+// 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+// 	}
+
+// 	if rowsAffected == 0 {
+// 		return c.JSON(http.StatusOK, map[string]string{"message": "No rows affected"})
+// 	}
+
+// 	return c.JSON(http.StatusOK, map[string]string{"message": "Employee information updated successfully"})
+// }
+
+func AddEmployee(c echo.Context) error { // แยก model ตอนส่งกับรับกลับ ส่ง id รับ name
+	// ตรวจสอบ Content-Type
+	if c.Request().Header.Get("Content-Type") != "application/json" {
+		return c.JSON(http.StatusUnsupportedMediaType, "Content-Type must be application/json")
 	}
-	if last_name == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Last Name")
+
+	var req models.EmployeeInsert
+	if err := c.Bind(&req); err != nil {
+		fmt.Println("Error binding request:", err)
+		return c.JSON(http.StatusBadRequest, "Invalid request body")
 	}
-	if position_id == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Position Id")
+
+	// ตรวจสอบ fields ที่จำเป็น
+	if req.Employee_id == "" || req.First_name == "" || req.Last_name == "" ||
+		req.Position_id == "" || req.Phone_number == "" ||
+		req.Email == "" || req.Hire_date == "" || req.Work_status == "" || req.Salary == 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "All fields are required"})
 	}
-	if phone_number == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Phone Number")
-	}
-	if department_id == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Department id")
-	}
-	if salary == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Salary")
-	}
-	if email == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Email")
-	}
-	if hire_date == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Hire Date")
-	}
-	//ไม่เช็ค resignation date
-	if work_status == "" {
-		return c.JSON(http.StatusBadRequest, "Missing Work Status")
-	}
+
+	// เตรียมข้อมูล insert
 	data := map[string]interface{}{
-		"employee_id":      employee_id,
-		"first_name":       first_name,
-		"last_name":        last_name,
-		"position_id":      position_id,
-		"phone_number":     phone_number,
-		"department_id":    department_id,
-		"salary":           salary,
-		"email":            email,
-		"hire_date":        hire_date,
-		"resignation_date": resignationDate, // optional
-		"work_status":      work_status,
+		"employee_id":      req.Employee_id,
+		"first_name":       req.First_name,
+		"last_name":        req.Last_name,
+		"position_id":      req.Position_id,
+		"phone_number":     req.Phone_number,
+		"salary":           req.Salary,
+		"email":            req.Email,
+		"hire_date":        req.Hire_date,
+		"resignation_date": nil,
+		"work_status":      req.Work_status,
+	}
+
+	if req.Resignation_date != "" {
+		data["resignation_date"] = req.Resignation_date
 	}
 
 	rowsAffected, err := services.AddEmployee(data)
@@ -128,12 +212,13 @@ func AddEmployee(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Employee added successfully"})
 }
+
 func GetAllEmployee(c echo.Context) error {
-	patient, err := services.GetAllEmployee()
+	employee, err := services.GetAllEmployee()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, patient)
+	return c.JSON(http.StatusOK, employee)
 }
 func GetEmployee(c echo.Context) error {
 	id := c.Param("id")
