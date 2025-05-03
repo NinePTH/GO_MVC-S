@@ -56,11 +56,11 @@ func InitDB() {
 	dbName := os.Getenv("DB_NAME")
 
 	// Debug: Test if variables are loaded
-    fmt.Println("DB_USER:", dbUser)
-	fmt.Println("DB_PASSWORD:", dbPassword)
-	fmt.Println("DB_HOST:", dbHost)
-	fmt.Println("DB_PORT:", dbPort)
-	fmt.Println("DB_NAME:", dbName)
+    // fmt.Println("DB_USER:", dbUser)
+	// fmt.Println("DB_PASSWORD:", dbPassword)
+	// fmt.Println("DB_HOST:", dbHost)
+	// fmt.Println("DB_PORT:", dbPort)
+	// fmt.Println("DB_NAME:", dbName)
 
 	// Ensure all necessary environment variables are set
 	if dbUser == "" || dbPassword == "" || dbHost == "" || dbPort == "" || dbName == "" {
@@ -68,7 +68,8 @@ func InitDB() {
 	}
 
 	// PostgreSQL data source name (DSN)
-	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=require&pool_mode=session", dbUser, dbPassword, dbHost, dbPort, dbName)
+	// Add require&pool_mode=session before merge to main
+	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPassword, dbHost, dbPort, dbName)
 	// MySQL database credentials
 	// dsn := "root:yourpassword@tcp(localhost:3306)/yourdb"
 	var err error

@@ -6,11 +6,25 @@ import (
 	"github.com/NinePTH/GO_MVC-S/src/models"
 )
 
+func UpdateUser(id string, data map[string]interface{}) (int64, error) {
+	table := "users"
+	condition := "id = $1"
+	conditionValues := []interface{}{id}
+
+	// Call UpdateData with correct parameters
+	rowsAffected, err := UpdateData(table, data, condition, conditionValues)
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}
+
 func GetUser(id string) (*models.User, error) {
 	table := "users"
 	fields := []string{"id", "name", "age"}
 
-	result, err := SelectData(table, fields, true, "id = $1", []interface{}{id})
+	result, err := SelectData(table, fields, true, "id = $1", []interface{}{id},false,"","","")
 
 	if err != nil {
 		return nil, err
@@ -40,7 +54,7 @@ func GetAllUsers() ([]models.User, error) {
 	fields := []string{"id", "name", "age"}
 
 	// Call SelectData function
-	results, err := SelectData("users", fields, false, "", nil)
+	results, err := SelectData("users", fields, false, "", nil,false,"","","")
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +91,9 @@ func AddUser(data map[string]interface{}) (int64, error) {
 
 	return rowsAffected, nil
 }
+
+
+
 
 func DeleteUser(id string) (int64, error) {
 	table := "users"

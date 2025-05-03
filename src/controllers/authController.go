@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/NinePTH/GO_MVC-S/src/models"
+	"github.com/NinePTH/GO_MVC-S/src/models/auth"
 	"github.com/NinePTH/GO_MVC-S/src/services"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -24,15 +24,14 @@ func Register(c echo.Context) error {
     fmt.Println("Raw Request Body:", string(body))
     c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body for Bind()
 
-    var req models.AuthRequest
+    var req auth.RegisterRequest
 
     // Bind request JSON to struct
-    if err := c.Bind(&req); err != nil || req.Username == "" || req.Password == "" {
-        fmt.Println("Bind Error:", err)
-        return c.JSON(http.StatusBadRequest, "Invalid request")
+    if err := c.Bind(&req); err != nil || req.Username == "" || req.Password == "" || req.Role == "" || req.Id == "" {
+        return c.JSON(http.StatusBadRequest, "Invalid request username, password, role and id must be provided")
     }
 
-    _, err := services.RegisterUser(req.Username, req.Password)
+    _, err := services.RegisterUser(req.Username, req.Password, req.Role, req.Id)
     if err != nil {
         return c.JSON(http.StatusInternalServerError, err.Error())
     }
@@ -50,9 +49,9 @@ func Login(c echo.Context) error {
      fmt.Println("Raw Request Body:", string(body))
      c.Request().Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body for Bind()
 
-    var req models.AuthRequest
+    var req auth.LoginRequest
     if err:= c.Bind(&req); err != nil || req.Username == "" || req.Password == "" {
-        return c.JSON(http.StatusBadRequest, "Invalid request")
+        return c.JSON(http.StatusBadRequest, "Invalid request username and password must be provided")
     }
 
     user, err := services.AuthenticateUser(req.Username, req.Password)
@@ -73,13 +72,15 @@ func Profile(c echo.Context) error {
 	}
 
 	// Extract the username from the claims
-	username, err := claims["username"].(string)
-	if !err {
-		return c.JSON(http.StatusUnauthorized, "Username not found in token claims")
+	username, usernameOk := claims["username"].(string)
+	role, roleOk := claims["role"].(string)
+	patientId, patientIdOk := claims["patient_id"].(string)
+	if !usernameOk || !roleOk || !patientIdOk {
+		return c.JSON(http.StatusUnauthorized, "Invalid token claims")
 	}
 
 	// Print username for debugging (optional)
-	fmt.Println("Username:", username)
+	fmt.Printf("Username: %s, Role: %s\n", username, role)
 
-    return c.JSON(http.StatusOK, map[string]string{"username":  username})
+    return c.JSON(http.StatusOK, map[string]string{"username":  username, "role": role, "patient_id": patientId})
 }
