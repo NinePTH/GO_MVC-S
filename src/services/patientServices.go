@@ -25,6 +25,10 @@ func GetPatientSearch(id string, first_name string, last_name string) ([]patient
 		return nil, err
 	}
 
+	if len(results) == 0 {
+		return nil, fmt.Errorf("Patient not found")
+	}
+
 	var patientResponses []patients.GetPatientResponse
 
 	for _, row := range results {
