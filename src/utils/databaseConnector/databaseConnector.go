@@ -69,7 +69,7 @@ func InitDB() {
 
 	// PostgreSQL data source name (DSN)
 	// Add require &pool_mode=session before merge to main
-	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPassword, dbHost, dbPort, dbName)
+	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable&pool_mode=session", dbUser, dbPassword, dbHost, dbPort, dbName)
 	// MySQL database credentials
 	// dsn := "root:yourpassword@tcp(localhost:3306)/yourdb"
 	var err error

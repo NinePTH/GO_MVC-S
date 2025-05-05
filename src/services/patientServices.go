@@ -118,7 +118,7 @@ func GetPatientSearch(id string, first_name string, last_name string) ([]patient
 		table = "patient_appointment"
 		fields = []string{"*"}
 		args = []interface{}{patient_id}
-		allergyResults, err = SelectData(
+		appointmentResults, err := SelectData(
 			table,
 			fields,
 			true,
@@ -132,13 +132,17 @@ func GetPatientSearch(id string, first_name string, last_name string) ([]patient
 		if err != nil {
 			return nil, err
 		}
-		var patient_appointment []patients.PatientAppointment
-		for _, row := range allergyResults {
-			patient_appointment = append(patient_appointment, patients.PatientAppointment{
-				Time:  row["time"].(time.Time).Format("15:04:05"),
-				Date:  row["date"].(time.Time).Format("02-01-2006"),
-				Topic: row["topic"].(string),
-			})
+
+		var patient_appointment patients.PatientAppointment
+
+		if len(appointmentResults) == 0 {
+			patient_appointment = patients.PatientAppointment{}
+		} else {
+			patient_appointment = patients.PatientAppointment{
+				Time:  appointmentResults[0]["time"].(time.Time).Format("15:04:05"),
+				Date:  appointmentResults[0]["date"].(time.Time).Format("02-01-2006"),
+				Topic: appointmentResults[0]["topic"].(string),
+			}
 		}
 
 		// รวมร่าง json response = patient_model + medical_history + Patient_appointment + patient_chronicdisease + patientdrug_allerygy
@@ -479,7 +483,7 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	table = "patient_appointment"
 	fields = []string{"*"}
 	args = []interface{}{patient_id}
-	allergyResults, err = SelectData(
+	appointmentResults, err := SelectData(
 		table,
 		fields,
 		true,
@@ -493,13 +497,17 @@ func GetPatient(id string) (*patients.GetPatientResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	var patient_appointment []patients.PatientAppointment
-	for _, row := range allergyResults {
-		patient_appointment = append(patient_appointment, patients.PatientAppointment{
-			Time:  row["time"].(time.Time).Format("15:04:05"),
-			Date:  row["date"].(time.Time).Format("02-01-2006"),
-			Topic: row["topic"].(string),
-		})
+
+	var patient_appointment patients.PatientAppointment
+
+	if len(appointmentResults) == 0 {
+		patient_appointment = patients.PatientAppointment{}
+	} else {
+		patient_appointment = patients.PatientAppointment{
+			Time:  appointmentResults[0]["time"].(time.Time).Format("15:04:05"),
+			Date:  appointmentResults[0]["date"].(time.Time).Format("02-01-2006"),
+			Topic: appointmentResults[0]["topic"].(string),
+		}
 	}
 
 	// รวมร่าง json response = patient_model + medical_history + patient_chronicdisease + patientdrug_allerygy
@@ -610,7 +618,7 @@ func GetAllPatients() ([]patients.GetPatientResponse, error) {
 		table = "patient_appointment"
 		fields = []string{"*"}
 		args = []interface{}{patient_id}
-		allergyResults, err = SelectData(
+		appointmentResults, err := SelectData(
 			table,
 			fields,
 			true,
@@ -624,13 +632,17 @@ func GetAllPatients() ([]patients.GetPatientResponse, error) {
 		if err != nil {
 			return nil, err
 		}
-		var patient_appointment []patients.PatientAppointment
-		for _, row := range allergyResults {
-			patient_appointment = append(patient_appointment, patients.PatientAppointment{
-				Time:  row["time"].(time.Time).Format("15:04:05"),
-				Date:  row["date"].(time.Time).Format("02-01-2006"),
-				Topic: row["topic"].(string),
-			})
+		
+		var patient_appointment patients.PatientAppointment
+
+		if len(appointmentResults) == 0 {
+			patient_appointment = patients.PatientAppointment{}
+		} else {
+			patient_appointment = patients.PatientAppointment{
+				Time:  appointmentResults[0]["time"].(time.Time).Format("15:04:05"),
+				Date:  appointmentResults[0]["date"].(time.Time).Format("02-01-2006"),
+				Topic: appointmentResults[0]["topic"].(string),
+			}
 		}
 
 		// รวมร่าง json response = patient_model + medical_history + Patient_appointment + patient_chronicdisease + patientdrug_allerygy
