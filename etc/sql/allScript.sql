@@ -146,6 +146,7 @@ CREATE TABLE Patient_Appointment (
     date DATE NOT NULL,
     topic TEXT NOT NULL,
     FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE SET NULL
+    --  Check date ให้มากกว่าวันที่ปัจจุบัน
 );
 
 INSERT INTO Patient_Appointment (appointment_id, patient_id, time, date, topic) VALUES
