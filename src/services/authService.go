@@ -35,6 +35,20 @@ func RegisterUser(username string, password string, role string, id string) (int
 		return 0, fmt.Errorf("There is no patient or staff with id %s or the patient or staff has already been registered", id)
 	}
 
+	userTable := "users"
+	checkUsernameFields := []string{"*"}
+	checkUsernameWhereCondition := "username = $1"
+
+	result, err = SelectData(userTable, checkUsernameFields, true, checkUsernameWhereCondition, []interface{}{username}, false, "", "","")
+
+	if err != nil {
+		return 0, err
+	}
+
+	if len(result) > 0 {
+		return 0, errors.New("Username already exists")
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return 0, err
@@ -46,7 +60,7 @@ func RegisterUser(username string, password string, role string, id string) (int
 		"role":     role,
 	}
 
-	insertResult, err := InsertData("users", data)
+	insertResult, err := InsertData(userTable, data)
 	if err != nil {
 		return 0, err
 	}
