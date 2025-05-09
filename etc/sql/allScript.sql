@@ -1,15 +1,45 @@
-CREATE TYPE user_role AS ENUM ('patient', 'medical_personnel', 'HR');
-CREATE TABLE Users (
+-- Create `user_role` type if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+        CREATE TYPE user_role AS ENUM ('patient', 'medical_personnel', 'HR');
+    END IF;
+END $$;
+
+-- Create `blood_group` type if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'blood_group') THEN
+        CREATE TYPE blood_group AS ENUM ('A', 'B', 'AB', 'O');
+    END IF;
+END $$;
+
+-- Create `sex` type if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'sex') THEN
+        CREATE TYPE sex AS ENUM ('male', 'female');
+    END IF;
+END $$;
+
+-- Create `status` type if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'status') THEN
+        CREATE TYPE status AS ENUM ('yes', 'no');
+    END IF;
+END $$;
+
+-- Create Users table
+CREATE TABLE IF NOT EXISTS Users (
     user_id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
+    password TEXT NOT NULL,
     role user_role NOT NULL
 );
 
-CREATE TYPE blood_group AS ENUM ('A', 'B', 'AB', 'O');
-CREATE TYPE sex AS ENUM ('male', 'female');
-CREATE TYPE status AS ENUM ('yes','no');
-CREATE TABLE Patient (
+-- Create Patient table
+CREATE TABLE IF NOT EXISTS Patient (
     patient_id VARCHAR(4) PRIMARY KEY,
     user_id INT UNIQUE,
     first_name VARCHAR(100) NOT NULL,
@@ -27,24 +57,116 @@ CREATE TABLE Patient (
     unhealthy_habits VARCHAR(50) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL,
     CHECK (phone_number ~ '^[0-9]+$'),
-	UNIQUE (first_name, last_name)
+    UNIQUE (first_name, last_name)
 );
 
-CREATE TABLE Medical_history (
-	medical_history_id SERIAL PRIMARY KEY,
-	patient_id VARCHAR(4) NOT NULL,
-	detail TEXT NOT NULL,
-	time TIME NOT NULL,
-	date date NOT NULL,
-	FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE
+-- Create Medical_history table
+CREATE TABLE IF NOT EXISTS Medical_history (
+    medical_history_id SERIAL PRIMARY KEY,
+    patient_id VARCHAR(4) NOT NULL,
+    detail TEXT NOT NULL,
+    time TIME NOT NULL,
+    date date NOT NULL,
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE
 );
 
-INSERT INTO Users (username, password, role)
-VALUES
-('john_doe', 'hashed_password_1', 'patient'),
-('dr_smith', 'hashed_password_2', 'medical_personnel'),
-('hr_admin', 'hashed_password_3', 'HR');
+-- Create Department table
+CREATE TABLE IF NOT EXISTS Department(
+    department_id VARCHAR(4) PRIMARY KEY,
+    department_name VARCHAR(100) UNIQUE NOT NULL
+);
 
+-- Create Position table
+CREATE TABLE IF NOT EXISTS Position (
+    position_id VARCHAR(4) PRIMARY KEY,
+    department_id VARCHAR(4) NOT NULL,
+    position_name VARCHAR(100) NOT NULL,
+    FOREIGN KEY (department_id) REFERENCES Department(department_id) ON DELETE CASCADE
+);
+
+-- Create Employee table
+CREATE TABLE IF NOT EXISTS Employee(
+    employee_id VARCHAR(4) PRIMARY KEY,
+    user_id INT,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    position_id VARCHAR(4),
+    phone_number VARCHAR(15) UNIQUE NOT NULL, 
+    salary DECIMAL(10,2) NOT NULL,
+    email VARCHAR(50) UNIQUE NOT NULL,
+    hire_date DATE NOT NULL,
+    resignation_date DATE,
+    work_status status NOT NULL DEFAULT 'yes',
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL,
+    FOREIGN KEY (position_id) REFERENCES Position(position_id) ON DELETE SET NULL,
+    CHECK (phone_number ~ '^[0-9]+$'),
+    CHECK (resignation_date IS NULL OR resignation_date > hire_date),
+    UNIQUE (first_name, last_name)
+);
+
+-- Create Patient_Appointment table
+CREATE TABLE IF NOT EXISTS Patient_Appointment (
+    appointment_id SERIAL PRIMARY KEY,
+    patient_id VARCHAR(4) NOT NULL,
+    time TIME NOT NULL,
+    date DATE NOT NULL,
+    topic TEXT NOT NULL,
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE
+);
+
+-- Create Disease table
+CREATE TABLE IF NOT EXISTS Disease (
+    disease_id VARCHAR(4) PRIMARY KEY, 
+    disease_name VARCHAR(100) NOT NULL, 
+    UNIQUE(disease_name)
+);
+
+-- Create Patient_chronic_disease table
+CREATE TABLE IF NOT EXISTS Patient_chronic_disease (
+    id SERIAL PRIMARY KEY,
+    patient_id VARCHAR(4) NOT NULL,
+    disease_id VARCHAR(4) NOT NULL,
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (disease_id) REFERENCES Disease(disease_id) ON DELETE CASCADE,
+    UNIQUE (patient_id, disease_id)
+);
+
+-- Create drug table
+CREATE TABLE IF NOT EXISTS drug (
+    drug_id VARCHAR(4) PRIMARY KEY, 
+    drug_name VARCHAR(100) NOT NULL, 
+    UNIQUE(drug_name)
+);
+
+-- Create Patient_drug_allergy table
+CREATE TABLE IF NOT EXISTS Patient_drug_allergy (
+    id SERIAL PRIMARY KEY,
+    patient_id VARCHAR(4) NOT NULL,
+    drug_id VARCHAR(4) NOT NULL,
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (drug_id) REFERENCES drug(drug_id) ON DELETE CASCADE,
+    UNIQUE (patient_id, drug_id)
+);
+
+-- Create indexes
+-- For patient search
+CREATE INDEX IF NOT EXISTS idx_patient_id ON Patient(patient_id);
+CREATE INDEX IF NOT EXISTS idx_patient_first_name ON Patient(first_name);
+CREATE INDEX IF NOT EXISTS idx_patient_last_name ON Patient(last_name);
+
+-- For employee search
+CREATE INDEX IF NOT EXISTS idx_employee_id ON Employee(employee_id);
+CREATE INDEX IF NOT EXISTS idx_employee_first_name ON Employee(first_name);
+CREATE INDEX IF NOT EXISTS idx_employee_last_name ON Employee(last_name);
+
+-- For Foreign Keys (use to JOIN tables)
+CREATE INDEX IF NOT EXISTS idx_patient_user_id ON Patient(user_id);
+CREATE INDEX IF NOT EXISTS idx_medical_history_patient_id ON Medical_history(patient_id);
+CREATE INDEX IF NOT EXISTS idx_appointment_patient_id ON Patient_Appointment(patient_id);
+CREATE INDEX IF NOT EXISTS idx_chronic_disease_patient_id ON Patient_chronic_disease(patient_id);
+CREATE INDEX IF NOT EXISTS idx_drug_allergy_patient_id ON Patient_drug_allergy(patient_id);
+
+-- Insert data
 INSERT INTO Patient (
     patient_id, first_name, last_name, age, date_of_birth, gender,
     blood_type, email, health_insurance, address, phone_number,
@@ -59,17 +181,37 @@ VALUES
  '0987654321', '3210987654321', 'Diabetes','Drunk'),
 ( 'P003', 'Mary', 'Johnson', 25, '1999-08-10', 'female', 'O',
  'mary.johnson@example.com', 'no', '789 Pine Rd, Villagetown', 
- '0876543210', '6543210987654', 'Healthy','None');
+ '0876543210', '6543210987654', 'Healthy','None'),
+ ( 'P004', 'Michael', 'Brown', 35, '1989-02-18', 'male', 'AB', 
+  'michael.brown@example.com', 'yes', '101 Maple St, Capital City', 
+  '0654321098', '9876543210123', 'Asthma', 'Smoker'),
+( 'P005', 'Emily', 'Davis', 28, '1996-07-05', 'female', 'A', 
+  'emily.davis@example.com', 'yes', '202 Birch Ln, Riverside', 
+  '0789012345', '1122334455667', 'Allergy', 'None'),
+( 'P006', 'William', 'Taylor', 50, '1974-09-30', 'male', 'O', 
+  'william.taylor@example.com', 'no', '303 Cedar Dr, Hillside', 
+  '0923456781', '7766554433221', 'Heart Disease', 'Drunk'),
+( 'P007', 'Sophia', 'Martinez', 40, '1984-03-12', 'female', 'B', 
+  'sophia.martinez@example.com', 'yes', '404 Elm St, Lakeside', 
+  '0845678910', '3344556677889', 'Obesity', 'Smoker'),
+( 'P008', 'James', 'Wilson', 22, '2002-06-25', 'male', 'AB', 
+  'james.wilson@example.com', 'no', '505 Cherry Ave, Uptown', 
+  '0765432190', '9988776655443', 'Healthy', 'None'),
+( 'P009', 'Olivia', 'Anderson', 31, '1993-12-08', 'female', 'O', 
+  'olivia.anderson@example.com', 'yes', '606 Willow Rd, Midtown', 
+  '0812345678', '5566778899001', 'Hypertension', 'Drunk'),
+( 'P010', 'Daniel', 'Thomas', 29, '1995-04-20', 'male', 'B', 
+  'daniel.thomas@example.com', 'no', '707 Ash Pl, Downtown', 
+  '0743210987', '4433221100998', 'Healthy', 'None');
 
- INSERT INTO Medical_history (patient_id, detail, time, date)
-VALUES ('P001', 'Fever and headache and maybe kys', '10:30:00', '2025-04-08');
-VALUES ('P002', 'Fever and stomachache', '10:30:00', '2025-04-08');
+INSERT INTO Medical_history (patient_id, detail, time, date)
+VALUES ('P001', 'Fever and headache and maybe kys', '10:30:00', '2025-04-08'),
+('P002', 'Fever and stomachache', '10:30:00', '2025-04-08'),
+('P003', 'Mild cough and sore throat', '11:00:00', '2025-04-08'),
+('P004', 'Chest pain and shortness of breath', '11:15:00', '2025-04-08'),
+('P001', 'Dizziness and fatigue', '11:30:00', '2025-08-08'),
+('P006', 'Back pain and muscle cramps', '11:45:00', '2025-04-08');
 
-
-CREATE TABLE Department(
-department_id VARCHAR(4) PRIMARY KEY,
-department_name VARCHAR(100) UNIQUE NOT NULL
-);
 
 INSERT INTO DEPARTMENT VALUES
 ('D001', 'Cardiology'),
@@ -84,13 +226,6 @@ INSERT INTO DEPARTMENT VALUES
 ('D010', 'Endocrinology'),
 ('D011', 'Human Resource');
 
-CREATE TABLE Position (
-position_id VARCHAR(4) PRIMARY KEY,
-department_id VARCHAR(4),
-position_name VARCHAR(100) NOT NULL,
-FOREIGN KEY (department_id) REFERENCES Department(department_id)
-);
-
 INSERT INTO Position Values 
 ('P001','D001','Doctor'),
 ('P002','D002','Nurse'),
@@ -104,61 +239,38 @@ INSERT INTO Position Values
 ('P010','D010','Doctor'),
 ('P011', 'D011', 'HR');
 
-
-
-CREATE TABLE Employee(
-    employee_id VARCHAR(4) PRIMARY KEY,
-    user_id INT,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    position_id VARCHAR(4),
-    phone_number VARCHAR(15) UNIQUE NOT NULL, 
-    salary DECIMAL(10,2) NOT NULL,
-    email VARCHAR(50) UNIQUE NOT NULL,
-    hire_date DATE NOT NULL,
-    resignation_date DATE,
-    work_status status NOT NULL DEFAULT 'yes',
-    
-    -- Constraints
-    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL,
-    FOREIGN KEY (position_id) REFERENCES Position(position_id) ON DELETE SET NULL,
-    
-    CHECK (phone_number ~ '^[0-9]+$'),
-    CHECK (
-        resignation_date IS NULL OR resignation_date > hire_date
-    ),
-    
-    UNIQUE (first_name, last_name)
-);
-
 INSERT INTO Employee VALUES
 ('E001',NULL, 'John', 'Daltin', 'P001', '0812345678', 45000.00, '.wong@example.com', '2022-01-15', NULL, 'yes'),
 ('E002',NULL, 'Dim', 'Smith', 'P002', '0823456789', 50000.00, 'bob.chan@example.com', '2021-06-10', '2023-08-01', 'no'),
 ('E003',NULL, 'Jimmy', 'Tompson', 'P003', '0834567890', 52000.00, 'cindy.liu@example.com', '2023-02-20', NULL, 'yes'),
 ('E004',NULL, 'Brook', 'Sudlor', 'P004', '0845678901', 48000.00, 'david.ng@example.com', '2020-12-01', '2024-03-15', 'no'),
-('E005',NULL, 'Nine', 'Ok', 'P011', '0845678901', 48000.00, 'ok@example.com', '2020-12-01', '2024-03-15', 'no');;
+('E005',NULL, 'Nine', 'Ok', 'P011', '0845678908', 48000.00, 'ok@example.com', '2020-12-01', '2024-03-15', 'no'),
+('E006', NULL, 'Alice', 'Brown', 'P005', '0856789012', 47000.00, 'alice.brown@example.com', '2021-04-15', NULL, 'yes'),
+('E007', NULL, 'Bob', 'Wilson', 'P006', '0867890123', 53000.00, 'bob.wilson@example.com', '2022-05-20', '2024-12-31', 'no'),
+('E008', NULL, 'Clara', 'Davis', 'P007', '0878901234', 49000.00, 'clara.davis@example.com', '2023-03-01', NULL, 'yes'),
+('E009', NULL, 'David', 'Martinez', 'P008', '0889012345', 46000.00, 'david.martinez@example.com', '2020-09-10', '2023-07-30', 'no'),
+('E010', NULL, 'Eva', 'Johnson', 'P009', '0890123456', 51000.00, 'eva.johnson@example.com', '2021-11-05', NULL, 'yes'),
+('E011', NULL, 'Frank', 'Taylor', 'P010', '0801234567', 55000.00, 'frank.taylor@example.com', '2022-08-22', NULL, 'yes'),
+('E012', NULL, 'Grace', 'Harris', 'P001', '0813456789', 47000.00, 'grace.harris@example.com', '2023-01-10', NULL, 'yes'),
+('E013', NULL, 'Henry', 'Lee', 'P002', '0824567890', 52000.00, 'henry.lee@example.com', '2022-03-15', '2024-05-01', 'no'),
+('E014', NULL, 'Isabella', 'Clark', 'P003', '0835678901', 53000.00, 'isabella.clark@example.com', '2021-07-20', NULL, 'yes'),
+('E015', NULL, 'Jack', 'Robinson', 'P004', '0846789012', 50000.00, 'jack.robinson@example.com', '2020-11-25', '2023-09-30', 'no'),
+('E016', NULL, 'Karen', 'Lewis', 'P005', '0857890123', 49000.00, 'karen.lewis@example.com', '2022-02-28', NULL, 'yes'),
+('E017', NULL, 'Liam', 'Walker', 'P006', '0868901234', 46000.00, 'liam.walker@example.com', '2021-10-05', '2024-01-20', 'no'),
+('E018', NULL, 'Mia', 'Scott', 'P007', '0879012345', 51000.00, 'mia.scott@example.com', '2023-04-18', NULL, 'yes'),
+('E019', NULL, 'Noah', 'Green', 'P008', '0880123456', 55000.00, 'noah.green@example.com', '2022-12-12', NULL, 'yes'),
+('E020', NULL, 'Olivia', 'Hall', 'P009', '0891234567', 48000.00, 'olivia.hall@example.com', '2021-06-30', '2024-02-28', 'no');
 
-
-CREATE TABLE Patient_Appointment (
-    appointment_id SERIAL PRIMARY KEY,
-    patient_id VARCHAR(4) NOT NULL,
-    time TIME NOT NULL,
-    date DATE NOT NULL,
-    topic TEXT NOT NULL,
-    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE SET NULL
-    --  Check date ให้มากกว่าวันที่ปัจจุบัน
-);
-
-INSERT INTO Patient_Appointment (appointment_id, patient_id, time, date, topic) VALUES
-(1, 'P001', '11:30:00', '2025-05-15', 'Food restrict'),
-(2, 'P002', '09:30:00', '2025-05-16', 'Annual check-up'),
-(3, 'P003', '14:00:00', '2025-05-17', 'Follow-up consultation');
-
-CREATE TABLE Disease (
-    disease_id VARCHAR(4) PRIMARY KEY, 
-    disease_name VARCHAR(100) NOT NULL, 
-    UNIQUE(disease_name) 
-);
+INSERT INTO Patient_Appointment (patient_id, time, date, topic) VALUES
+('P001', '11:30:00', '2025-05-15', 'Food restrict'),
+('P002', '09:30:00', '2025-05-16', 'Annual check-up'),
+('P003', '14:00:00', '2025-05-17', 'Follow-up consultation'),
+('P004', '10:00:00', '2025-05-18', 'Cardiac monitoring'),
+('P005', '15:30:00', '2025-05-19', 'Dietary consultation'),
+('P006', '13:00:00', '2025-05-20', 'Physical therapy session'),
+('P007', '08:30:00', '2025-05-21', 'Obesity management'),
+('P008', '16:00:00', '2025-05-22', 'General check-up'),
+('P009', '11:00:00', '2025-05-23', 'Hypertension follow-up');
 
 INSERT INTO Disease VALUES
 ('I001', 'streptococcus pneumoniae'),
@@ -173,28 +285,11 @@ INSERT INTO Disease VALUES
 ('I010', 'rabies'),
 ('I011', 'meningitis');
 
-
-CREATE TABLE Patient_chronic_disease (
-    id SERIAL PRIMARY KEY,
-    patient_id VARCHAR(4) NOT NULL,
-    disease_id VARCHAR(4) NOT NULL,
-    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE,
-    FOREIGN KEY (disease_id) REFERENCES Disease(disease_id) ON DELETE CASCADE,
-    UNIQUE (patient_id, disease_id)
-);
-
 INSERT INTO Patient_chronic_disease (patient_id, disease_id)
 VALUES	('P001', 'I001'),
 		('P001', 'I003'),
 		('P002', 'I002'),
 		('P003', 'I004');
-
-
-CREATE TABLE drug (
-    drug_id VARCHAR(4) PRIMARY KEY, 
-    drug_name VARCHAR(100) NOT NULL, 
-    UNIQUE(drug_name) 
-);
 
 INSERT INTO drug VALUES
 ('R001', 'anti bacteria'),
@@ -209,17 +304,7 @@ INSERT INTO drug VALUES
 ('R010', 'insulin'),
 ('R011', 'lisinopril');
 
-CREATE TABLE Patient_drug_allergy (
-    id SERIAL PRIMARY KEY,
-    patient_id VARCHAR(4) NOT NULL,
-    drug_id VARCHAR(4) NOT NULL,
-    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE,
-    FOREIGN KEY (drug_id) REFERENCES drug(drug_id) ON DELETE CASCADE,
-    UNIQUE (patient_id, drug_id)
-);
-
 INSERT INTO Patient_drug_allergy (patient_id, drug_id)
 VALUES	('P001', 'R001'),
 		('P002', 'R003'),
 		('P003', 'R004');
-
