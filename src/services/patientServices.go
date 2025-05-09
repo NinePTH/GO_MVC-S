@@ -280,6 +280,12 @@ func UpdatePatient(req *patients.AddPatientRequest) (int64, error) {
 			}
 			totalRowsAffected++ // นับเพิ่มทีละ insert
 		}
+	} else if len(req.PatientChronicDisease) == 0 {
+		table := "patient_chronic_disease"
+		// ลบของเก่า
+		if err := DeleteByPatientID(table, patientID); err != nil {
+			return totalRowsAffected, fmt.Errorf("failed to delete chronic diseases: %v", err)
+		}
 	}
 
 	// ============ Drug allergy ============
@@ -301,6 +307,12 @@ func UpdatePatient(req *patients.AddPatientRequest) (int64, error) {
 				return totalRowsAffected, fmt.Errorf("insert drug allergy failed: %v", err)
 			}
 			totalRowsAffected++ // นับเพิ่มทีละ insert
+		}
+	} else if len(req.PatientDrugAllergy) == 0 {
+		table := "patient_drug_allergy"
+		// ลบของเก่า
+		if err := DeleteByPatientID(table, patientID); err != nil {
+			return totalRowsAffected, fmt.Errorf("failed to delete drug allergy: %v", err)
 		}
 	}
 	return totalRowsAffected, nil
